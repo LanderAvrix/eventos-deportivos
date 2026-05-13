@@ -1291,8 +1291,7 @@ export default function App() {
                       const setOk = (l,v) => l!=="" && v!=="" && l!==undefined && v!==undefined;
                       const setWin = (l,v) => setOk(l,v) ? (Number(l)>Number(v)?"local":Number(v)>Number(l)?"visit":null) : null;
                       const w1=setWin(s1L,s1V), w2=setWin(s2L,s2V), w3=setWin(s3L,s3V);
-                      const localSets=[w1,w2,w3].filter(x=>x==="local").length;
-                      const visitSets=[w1,w2,w3].filter(x=>x==="visit").length;
+                      
                       const needs3 = setOk(s1L,s1V) && setOk(s2L,s2V) && w1!==null && w2!==null && w1!==w2;
                       const autoWinner = localSets>=2?"local":visitSets>=2?"visitante":null;
                       const totalSets = [setOk(s1L,s1V),setOk(s2L,s2V),setOk(s3L,s3V)].filter(Boolean).length;
