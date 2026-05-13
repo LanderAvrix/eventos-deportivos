@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { db, auth } from "./firebase";
 import {
   collection, doc, onSnapshot, setDoc, deleteDoc, updateDoc, addDoc
@@ -8,22 +8,22 @@ import {
   reauthenticateWithCredential, EmailAuthProvider
 } from "firebase/auth";
 
-// ─── DATOS DEL TORNEO ────────────────────────────────────────────────────────
+// â”€â”€â”€ DATOS DEL TORNEO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const BOMBOS = [
   {
     id: 1, name: "Bombo 1", color: "#FFD700",
-    desc: "Elige 1 pareja — Los favoritos",
+    desc: "Elige 1 pareja â€” Los favoritos",
     pick: 1,
     parejas: ["TXIKITO - GALLAGA","GARMENDIA - SALAZAR","GOMEZ - SAGREDO",
-              "ARRUTIA - PRIETO","ARENAZA - OMEÑACA","AGIRRE - POBLACION"]
+              "ARRUTIA - PRIETO","ARENAZA - OMEÃ‘ACA","AGIRRE - POBLACION"]
   },
   {
     id: 2, name: "Bombo 2", color: "#C0C0C0",
     desc: "Elige 2 parejas",
     pick: 2,
     parejas: ["GUERRA - ETXEBARRIA","MARIN - ALVAREZ","ALAVA - ARROITA",
-              "BALENZIAGA - IBAÑEZ","LASAGABASTER - CARRETERO","EGURBIDE - SAENZ DE BURUAGA"]
+              "BALENZIAGA - IBAÃ‘EZ","LASAGABASTER - CARRETERO","EGURBIDE - SAENZ DE BURUAGA"]
   },
   {
     id: 3, name: "Bombo 3", color: "#CD7F32",
@@ -37,7 +37,7 @@ const BOMBOS = [
 // Todas las parejas del torneo
 const ALL_PAREJAS = BOMBOS.flatMap(b => b.parejas);
 
-// Partidos de la fase de liga (P1–P27)
+// Partidos de la fase de liga (P1â€“P27)
 // phase: "liga" | "playin" | "semis" | "final" | "tercero"
 // puntua: true = cuenta para la porra
 const CALENDAR = [
@@ -49,18 +49,18 @@ const CALENDAR = [
   {id:"P5",  fecha:"2026-04-20", hora:"21:00", local:"GOMEZ - SAGREDO",              visitante:"MARIN - ALVAREZ",        phase:"liga"},
   {id:"P3",  fecha:"2026-04-27", hora:"19:00", local:"LASAGABASTER - CARRETERO",     visitante:"GONDRA - HERNANDEZ",     phase:"liga"},
   {id:"P11", fecha:"2026-04-27", hora:"20:00", local:"GUEVARA - ZABALA",             visitante:"EGURBIDE - SAENZ DE BURUAGA", phase:"liga"},
-  {id:"P12", fecha:"2026-04-27", hora:"21:00", local:"MELERO - ALBERDI",             visitante:"ARENAZA - OMEÑACA",      phase:"liga"},
+  {id:"P12", fecha:"2026-04-27", hora:"21:00", local:"MELERO - ALBERDI",             visitante:"ARENAZA - OMEÃ‘ACA",      phase:"liga"},
   {id:"P9",  fecha:"2026-04-28", hora:"19:30", local:"DE MARCOS - SUSAETA",          visitante:"TXIKITO - GALLAGA",      phase:"liga"},
-  {id:"P8",  fecha:"2026-04-28", hora:"20:15", local:"BALENZIAGA - IBAÑEZ",          visitante:"AMIGO - AMIGO",          phase:"liga"},
+  {id:"P8",  fecha:"2026-04-28", hora:"20:15", local:"BALENZIAGA - IBAÃ‘EZ",          visitante:"AMIGO - AMIGO",          phase:"liga"},
   {id:"P13", fecha:"2026-05-04", hora:"19:00", local:"AGIRRE - POBLACION",           visitante:"LASAGABASTER - CARRETERO", phase:"liga"},
   {id:"P14", fecha:"2026-05-04", hora:"20:00", local:"ORS - ORS",                    visitante:"AMIGO - AMIGO",          phase:"liga"},
   {id:"P15", fecha:"2026-05-05", hora:"19:30", local:"AMIGO - AMIGO",                visitante:"AGIRRE - POBLACION",     phase:"liga"},
-  {id:"P7",  fecha:"2026-05-05", hora:"20:15", local:"ALAVA - ARROITA",              visitante:"BALENZIAGA - IBAÑEZ",    phase:"liga"},
-  {id:"P16", fecha:"2026-05-06", hora:"21:00", local:"ARENAZA - OMEÑACA",            visitante:"GOMEZ - SAGREDO",        phase:"liga"},
+  {id:"P7",  fecha:"2026-05-05", hora:"20:15", local:"ALAVA - ARROITA",              visitante:"BALENZIAGA - IBAÃ‘EZ",    phase:"liga"},
+  {id:"P16", fecha:"2026-05-06", hora:"21:00", local:"ARENAZA - OMEÃ‘ACA",            visitante:"GOMEZ - SAGREDO",        phase:"liga"},
   {id:"P26", fecha:"2026-05-07", hora:"19:30", local:"ARRUTIA - PRIETO",             visitante:"AGIRRE - POBLACION",     phase:"liga"},
   {id:"P19", fecha:"2026-05-07", hora:"20:15", local:"GONDRA - HERNANDEZ",           visitante:"DE MARCOS - SUSAETA",    phase:"liga"},
   {id:"P20", fecha:"2026-05-07", hora:"21:00", local:"MARIN - ALVAREZ",              visitante:"EGURBIDE - SAENZ DE BURUAGA", phase:"liga"},
-  {id:"P27", fecha:"2026-05-11", hora:"12:00", local:"ARENAZA - OMEÑACA",            visitante:"BALENZIAGA - IBAÑEZ",    phase:"liga"},
+  {id:"P27", fecha:"2026-05-11", hora:"12:00", local:"ARENAZA - OMEÃ‘ACA",            visitante:"BALENZIAGA - IBAÃ‘EZ",    phase:"liga"},
   {id:"P22", fecha:"2026-05-11", hora:"19:00", local:"LASAGABASTER - CARRETERO",     visitante:"GUERRA - ETXEBARRIA",    phase:"liga"},
   {id:"P24", fecha:"2026-05-11", hora:"20:00", local:"ORS - ORS",                    visitante:"ALAVA - ARROITA",        phase:"liga"},
   {id:"P21", fecha:"2026-05-11", hora:"21:00", local:"GUEVARA - ZABALA",             visitante:"MELERO - ALBERDI",       phase:"liga"},
@@ -68,28 +68,28 @@ const CALENDAR = [
   {id:"P17", fecha:"2026-05-13", hora:"21:00", local:"ARRUTIA - PRIETO",             visitante:"GUEVARA - ZABALA",       phase:"liga"},
   {id:"P18", fecha:"2026-05-14", hora:"19:30", local:"GARMENDIA - SALAZAR",          visitante:"ORS - ORS",              phase:"liga"},
   {id:"P23", fecha:"2026-05-14", hora:"20:15", local:"MARIN - ALVAREZ",              visitante:"DE MARCOS - SUSAETA",    phase:"liga"},
-  // Play-In (NO puntúa para la porra)
-  {id:"PIN1", fecha:"2026-05-18", hora:"19:00", local:"3º",              visitante:"10º",             phase:"playin"},
-  {id:"PIN2", fecha:"2026-05-18", hora:"20:00", local:"4º",              visitante:"9º",              phase:"playin"},
-  {id:"PIN3", fecha:"2026-05-19", hora:"19:30", local:"5º",              visitante:"8º",              phase:"playin"},
-  {id:"PIN4", fecha:"2026-05-19", hora:"20:30", local:"6º",              visitante:"7º",              phase:"playin"},
+  // Play-In (NO puntÃºa para la porra)
+  {id:"PIN1", fecha:"2026-05-18", hora:"19:00", local:"3Âº",              visitante:"10Âº",             phase:"playin"},
+  {id:"PIN2", fecha:"2026-05-18", hora:"20:00", local:"4Âº",              visitante:"9Âº",              phase:"playin"},
+  {id:"PIN3", fecha:"2026-05-19", hora:"19:30", local:"5Âº",              visitante:"8Âº",              phase:"playin"},
+  {id:"PIN4", fecha:"2026-05-19", hora:"20:30", local:"6Âº",              visitante:"7Âº",              phase:"playin"},
   {id:"PIN5", fecha:"2026-05-21", hora:"19:30", local:"Ganador PIN1",    visitante:"Ganador PIN4",    phase:"playin"},
   {id:"PIN6", fecha:"2026-05-21", hora:"20:30", local:"Ganador PIN2",    visitante:"Ganador PIN3",    phase:"playin"},
-  // Semifinales (SÍ puntúa)
-  {id:"S1",  fecha:"2026-05-25", hora:"19:00", local:"1º",              visitante:"Peor Play-In",    phase:"semis"},
-  {id:"S2",  fecha:"2026-05-25", hora:"20:00", local:"2º",              visitante:"Mejor Play-In",   phase:"semis"},
-  // 3º y 4º puesto
+  // Semifinales (SÃ puntÃºa)
+  {id:"S1",  fecha:"2026-05-25", hora:"19:00", local:"1Âº",              visitante:"Peor Play-In",    phase:"semis"},
+  {id:"S2",  fecha:"2026-05-25", hora:"20:00", local:"2Âº",              visitante:"Mejor Play-In",   phase:"semis"},
+  // 3Âº y 4Âº puesto
   {id:"3P",  fecha:"2026-05-26", hora:"19:30", local:"Perdedor S1",     visitante:"Perdedor S2",     phase:"tercero"},
-  // Final (SÍ puntúa)
+  // Final (SÃ puntÃºa)
   {id:"F",   fecha:"2026-05-28", hora:"20:15", local:"Ganador S1",      visitante:"Ganador S2",      phase:"final"},
 ];
 
-// Fases que puntúan para la porra
+// Fases que puntÃºan para la porra
 const PUNTUA = (phase) => ["liga","semis","final"].includes(phase);
 
-// Resuelve nombres reales de parejas en Play-In y Semis según clasificación
+// Resuelve nombres reales de parejas en Play-In y Semis segÃºn clasificaciÃ³n
 const resolveTeams = (cal, tablaTorneo, matchByCalId) => {
-  const pos = (n) => tablaTorneo[n-1]?.pareja || `${n}º`;
+  const pos = (n) => tablaTorneo[n-1]?.pareja || `${n}Âº`;
   const winnerOf = (id) => {
     const m = matchByCalId[id];
     if (!m?.result?.winner) return null;
@@ -102,8 +102,8 @@ const resolveTeams = (cal, tablaTorneo, matchByCalId) => {
   };
 
   const map = {
-    "3º": pos(3), "4º": pos(4), "5º": pos(5), "6º": pos(6),
-    "7º": pos(7), "8º": pos(8), "9º": pos(9), "10º": pos(10),
+    "3Âº": pos(3), "4Âº": pos(4), "5Âº": pos(5), "6Âº": pos(6),
+    "7Âº": pos(7), "8Âº": pos(8), "9Âº": pos(9), "10Âº": pos(10),
     "Ganador PIN1": winnerOf("PIN1") || `Gan. ${pos(3)} vs ${pos(10)}`,
     "Ganador PIN2": winnerOf("PIN2") || `Gan. ${pos(4)} vs ${pos(9)}`,
     "Ganador PIN3": winnerOf("PIN3") || `Gan. ${pos(5)} vs ${pos(8)}`,
@@ -115,7 +115,7 @@ const resolveTeams = (cal, tablaTorneo, matchByCalId) => {
       if (w5 && w6) return [w5,w6].sort((a,b) => {
         const ia = tablaTorneo.findIndex(r=>r.pareja===a);
         const ib = tablaTorneo.findIndex(r=>r.pareja===b);
-        return ib - ia; // peor = índice mayor
+        return ib - ia; // peor = Ã­ndice mayor
       })[0];
       return "Peor Play-In";
     })(),
@@ -124,11 +124,11 @@ const resolveTeams = (cal, tablaTorneo, matchByCalId) => {
       if (w5 && w6) return [w5,w6].sort((a,b) => {
         const ia = tablaTorneo.findIndex(r=>r.pareja===a);
         const ib = tablaTorneo.findIndex(r=>r.pareja===b);
-        return ia - ib; // mejor = índice menor
+        return ia - ib; // mejor = Ã­ndice menor
       })[0];
       return "Mejor Play-In";
     })(),
-    "1º": pos(1), "2º": pos(2),
+    "1Âº": pos(1), "2Âº": pos(2),
     "Ganador S1": winnerOf("S1") || `Gan. S1`,
     "Ganador S2": winnerOf("S2") || `Gan. S2`,
     "Perdedor S1": loserOf("S1") || `Per. S1`,
@@ -141,7 +141,7 @@ const resolveTeams = (cal, tablaTorneo, matchByCalId) => {
   };
 };
 
-// ─── PUNTUACIÓN (Champions: 4 pts 2-0, 3+1 pts 2-1) ────────────────────────
+// â”€â”€â”€ PUNTUACIÃ“N (Champions: 4 pts 2-0, 3+1 pts 2-1) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const puntosPorPartido = (result) => {
   // result: { winner: "local"|"visitante", sets: [a,b] o [a,b,c] }
@@ -191,7 +191,7 @@ const computeParticipantePuntos = (participante, matches) => {
   return { pts: total, detalle, misParejas };
 };
 
-// ─── TABLA DE LIGA (para seguimiento del torneo) ─────────────────────────────
+// â”€â”€â”€ TABLA DE LIGA (para seguimiento del torneo) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const computeTablaTorneo = (matches) => {
   const stats = {};
@@ -227,7 +227,7 @@ const computeTablaTorneo = (matches) => {
     }
   }
 
-  // Función para obtener resultado directo entre dos parejas
+  // FunciÃ³n para obtener resultado directo entre dos parejas
   const directResult = (a, b) => {
     const m = matches.find(m => m.phase === "liga" && m.result?.winner &&
       ((m.local === a && m.visitante === b) || (m.local === b && m.visitante === a)));
@@ -242,7 +242,7 @@ const computeTablaTorneo = (matches) => {
     if (b.pts !== a.pts) return b.pts - a.pts;
     // 2. Enfrentamiento directo
     const direct = directResult(a.pareja, b.pareja);
-    if (direct !== null) return -direct; // -1 = a ganó = a va antes
+    if (direct !== null) return -direct; // -1 = a ganÃ³ = a va antes
     // 3. Partidos ganados
     if (b.ganados !== a.ganados) return b.ganados - a.ganados;
     // 4. Diferencia de tantos
@@ -255,7 +255,7 @@ const computeTablaTorneo = (matches) => {
   });
 };
 
-// ─── CSS ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ CSS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Lora:wght@400;600&display=swap');
@@ -269,7 +269,7 @@ body{background:#06080e;}
 @media(max-width:600px){.refresh-btn{display:flex;}}
 .hdr{background:linear-gradient(150deg,#1a0808 0%,#06080e 45%,#1a0808 100%);padding:1.8rem 1.5rem 1.2rem;text-align:center;border-bottom:1px solid #c9272728;position:relative;overflow:hidden;}
 .hdr::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(55deg,transparent,transparent 35px,#ffffff03 35px,#ffffff03 36px);pointer-events:none;}
-.htrophy{font-size:2.6rem;display:block;filter:drop-shadow(0 0 16px #c9272799);cursor:pointer;}
+        <img src="/logo192.png" alt="Logo" onClick={handleTrophyTap} style={{width:"72px",height:"72px",objectFit:"contain",cursor:"pointer",filter:"drop-shadow(0 0 16px #c9272799)"}} />
 .htitle{font-family:'Bebas Neue',sans-serif;font-size:2.4rem;color:#c92727;letter-spacing:.1em;line-height:1;text-shadow:0 0 40px #c9272744;}
 .hsub{color:#5a3232;font-size:.72rem;letter-spacing:.12em;margin-top:.3rem;text-transform:uppercase;}
 .hbadge{display:inline-block;background:#c9272720;border:1px solid #c9272740;color:#c92727;border-radius:12px;padding:.18rem .7rem;font-size:.72rem;margin-top:.5rem;letter-spacing:.06em;}
@@ -354,7 +354,7 @@ const medalBorder = (i) => ["#c92727","#909090","#9a5a20"][i] || "#12172a";
 
 const phaseName = (phase) => ({
   liga: "Liga", playin: "Play-In", semis: "Semifinal",
-  tercero: "3er/4º", final: "Final"
+  tercero: "3er/4Âº", final: "Final"
 }[phase] || phase);
 
 const phaseClass = (phase) => `match-phase phase-${phase}`;
@@ -362,13 +362,13 @@ const phaseClass = (phase) => `match-phase phase-${phase}`;
 const formatFecha = (f) => {
   if (!f) return "";
   const [y, m, d] = f.split("-");
-  const dias = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+  const dias = ["Dom","Lun","Mar","MiÃ©","Jue","Vie","SÃ¡b"];
   const meses = ["","Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
   const dt = new Date(Number(y), Number(m) - 1, Number(d));
   return `${dias[dt.getDay()]} ${Number(d)} ${meses[Number(m)]}`;
 };
 
-// ─── APP ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ APP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function App() {
   const isAdminUrl = window.location.search.includes("athletic_1898");
@@ -439,7 +439,7 @@ export default function App() {
     return () => { u.forEach(x => x()); clearTimeout(splash); };
   }, []);
 
-  // ─── Computed ───────────────────────────────────────────────────────────────
+  // â”€â”€â”€ Computed â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const approved = participants.filter(p => p.approved);
   const pending = participants.filter(p => !p.approved);
@@ -469,13 +469,13 @@ export default function App() {
     .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
     .slice(0, 5);
 
-  // Puntos por pareja para mostrar en clasificación
+  // Puntos por pareja para mostrar en clasificaciÃ³n
   const parejaStats = {};
   for (const p of ALL_PAREJAS) {
     parejaStats[p] = computeParejaPuntos(p, matches);
   }
 
-  // ─── Handlers ───────────────────────────────────────────────────────────────
+  // â”€â”€â”€ Handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const handleTrophyTap = () => {
     const next = adminTaps + 1;
@@ -500,16 +500,16 @@ export default function App() {
   };
 
   const handleRegister = async () => {
-    if (!config.registrationOpen) return setRErr("Las inscripciones están cerradas.");
+    if (!config.registrationOpen) return setRErr("Las inscripciones estÃ¡n cerradas.");
     if (!rName.trim()) return setRErr("Introduce tu nombre.");
     if (!rSurname.trim()) return setRErr("Introduce tus apellidos.");
     const fullName = `${rName.trim()} ${rSurname.trim()}`;
-    if (!rPwd || rPwd.length < 6) return setRErr("La contraseña debe tener al menos 6 caracteres.");
+    if (!rPwd || rPwd.length < 6) return setRErr("La contraseÃ±a debe tener al menos 6 caracteres.");
     if (!rPicks.bombo1) return setRErr("Elige 1 pareja del Bombo 1.");
     if ((rPicks.bombo2 || []).length < 2) return setRErr("Elige 2 parejas del Bombo 2.");
     if ((rPicks.bombo3 || []).length < 2) return setRErr("Elige 2 parejas del Bombo 3.");
     if (participants.find(p => p.name.toLowerCase() === fullName.toLowerCase()))
-      return setRErr("Ese nombre ya está registrado.");
+      return setRErr("Ese nombre ya estÃ¡ registrado.");
     await addDoc(collection(db, "participants"), {
       name: fullName, firstName: rName.trim(), lastName: rSurname.trim(),
       pwd: rPwd, picks: rPicks, approved: false, createdAt: Date.now()
@@ -519,10 +519,10 @@ export default function App() {
   };
 
   const handleEditLogin = () => {
-    if (!config.registrationOpen) return setEditLoginErr("Las inscripciones están cerradas.");
+    if (!config.registrationOpen) return setEditLoginErr("Las inscripciones estÃ¡n cerradas.");
     const p = participants.find(p => p.name.toLowerCase() === editLoginName.trim().toLowerCase());
     if (!p) return setEditLoginErr("Nombre no encontrado.");
-    if (p.pwd !== editLoginPwd) return setEditLoginErr("Contraseña incorrecta.");
+    if (p.pwd !== editLoginPwd) return setEditLoginErr("ContraseÃ±a incorrecta.");
     setEditParticipant(p);
     setRName(p.firstName || ""); setRSurname(p.lastName || "");
     setRPwd(p.pwd);
@@ -531,7 +531,7 @@ export default function App() {
   };
 
   const handleSaveEdit = async () => {
-    if (!config.registrationOpen) return setRErr("Las inscripciones están cerradas.");
+    if (!config.registrationOpen) return setRErr("Las inscripciones estÃ¡n cerradas.");
     if (!rPicks.bombo1) return setRErr("Elige 1 pareja del Bombo 1.");
     if ((rPicks.bombo2 || []).length < 2) return setRErr("Elige 2 parejas del Bombo 2.");
     if ((rPicks.bombo3 || []).length < 2) return setRErr("Elige 2 parejas del Bombo 3.");
@@ -546,26 +546,26 @@ export default function App() {
   const handleReject = (id) => deleteDoc(doc(db, "participants", id));
 
   const handleAdminLogin = async () => {
-    if (!adminEmail || !adminPass) return setAdminErr("Introduce email y contraseña.");
+    if (!adminEmail || !adminPass) return setAdminErr("Introduce email y contraseÃ±a.");
     setAdminLoading(true); setAdminErr("");
     try {
       await signInWithEmailAndPassword(auth, adminEmail, adminPass);
       setAdminEmail(""); setAdminPass("");
     } catch (e) {
-      setAdminErr("Email o contraseña incorrectos.");
+      setAdminErr("Email o contraseÃ±a incorrectos.");
     } finally { setAdminLoading(false); }
   };
 
   const handleAdminLogout = () => signOut(auth);
 
   const reauth = async () => {
-    const pwd = window.prompt("Contraseña de admin:");
+    const pwd = window.prompt("ContraseÃ±a de admin:");
     if (!pwd) return false;
     try {
       const cred = EmailAuthProvider.credential(adminUser.email, pwd);
       await reauthenticateWithCredential(adminUser, cred);
       return true;
-    } catch (e) { window.alert("Contraseña incorrecta."); return false; }
+    } catch (e) { window.alert("ContraseÃ±a incorrecta."); return false; }
   };
 
   // Guardar resultado de partido
@@ -607,7 +607,7 @@ export default function App() {
     setDoc(doc(db, "config", "settings"), next);
   };
 
-  // ─── Render helpers ──────────────────────────────────────────────────────────
+  // â”€â”€â”€ Render helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const renderMatchResult = (calId) => {
     const m = matchByCalId[calId];
@@ -628,11 +628,11 @@ export default function App() {
     );
   };
 
-  // ─── VIEWS ───────────────────────────────────────────────────────────────────
+  // â”€â”€â”€ VIEWS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   if (loading) return (
     <div className="app"><style>{CSS}</style>
-      <div className="loading" style={{ paddingTop: "5rem" }}>⏳ Cargando...</div>
+      <div className="loading" style={{ paddingTop: "5rem" }}>â³ Cargando...</div>
     </div>
   );
 
@@ -644,36 +644,36 @@ export default function App() {
       <div className="hdr">
         <img src="/logo192.png" alt="Logo" onClick={handleTrophyTap} style={{width:"72px",height:"72px",objectFit:"contain",cursor:"poi
         <div className="htitle">PALETA CUERO 2026</div>
-        <div className="hsub">Txapelketa · Porra Solidaria</div>
+        <div className="hsub">Txapelketa Â· Porra Solidaria</div>
         {config.charityName && (
-          <div className="hbadge">❤️ Recaudación para: {config.charityName}</div>
+          <div className="hbadge">â¤ï¸ RecaudaciÃ³n para: {config.charityName}</div>
         )}
       </div>
 
       {/* NAV */}
       <nav className="nav">
         {[
-          { id: "home",       label: "🏠 Inicio" },
-          { id: "calendario", label: "📅 Calendario" },
-          { id: "liga",       label: "🏆 Liga" },
-          { id: "reglamento", label: "📋 Reglamento" },
-          { id: "porra",      label: "🎯 Porra Solidaria" },
-          { id: "ranking",    label: "🥇 Ranking Porra" },
-          { id: "instalar",   label: "📲 Instalar" },
-          ...(adminUnlocked ? [{ id: "admin", label: "⚙️ Admin" }] : []),
+          { id: "home",       label: "ðŸ  Inicio" },
+          { id: "calendario", label: "ðŸ“… Calendario" },
+          { id: "liga",       label: "ðŸ† Liga" },
+          { id: "reglamento", label: "ðŸ“‹ Reglamento" },
+          { id: "porra",      label: "ðŸŽ¯ Porra Solidaria" },
+          { id: "ranking",    label: "ðŸ¥‡ Ranking Porra" },
+          { id: "instalar",   label: "ðŸ“² Instalar" },
+          ...(adminUnlocked ? [{ id: "admin", label: "âš™ï¸ Admin" }] : []),
         ].map(t => (
           <button key={t.id} className={`nb${view === t.id ? " on" : ""}`}
             onClick={() => setView(t.id)}>{t.label}</button>
         ))}
       </nav>
 
-      {/* ── HOME ── */}
+      {/* â”€â”€ HOME â”€â”€ */}
       {view === "home" && (
         <div className="sec fade">
           {/* Solidaridad */}
           <div className="solidarity-bar">
-            ❤️ Porra solidaria — Premio: {config.prizeDesc || "2 entradas para un partido de pelota"}
-            {config.charityName && ` · Recaudación para ${config.charityName}`}
+            â¤ï¸ Porra solidaria â€” Premio: {config.prizeDesc || "2 entradas para un partido de pelota"}
+            {config.charityName && ` Â· RecaudaciÃ³n para ${config.charityName}`}
           </div>
 
           {/* Stats */}
@@ -687,7 +687,7 @@ export default function App() {
                 <div className="stn" style={{ color: config.registrationOpen ? "#5ec85e" : "#e05555" }}>
                   {config.registrationOpen ? "ABIERTA" : "CERRADA"}
                 </div>
-                <div className="stl">Inscripción</div>
+                <div className="stl">InscripciÃ³n</div>
               </div>
             </div>
           </div>
@@ -717,14 +717,14 @@ export default function App() {
                 </div>
               ))}
               <button className="btn btn-g btn-sm" style={{ marginTop: ".5rem" }}
-                onClick={() => setView("liga")}>Ver clasificación completa →</button>
+                onClick={() => setView("liga")}>Ver clasificaciÃ³n completa â†’</button>
             </div>
           )}
 
-          {/* Próximos partidos */}
+          {/* PrÃ³ximos partidos */}
           {upcoming.length > 0 && (
             <div className="card">
-              <div className="ct">Próximos Partidos</div>
+              <div className="ct">PrÃ³ximos Partidos</div>
               {upcoming.map(c => {
                 const resolved = resolveTeams(c, tablaTorneo, matchByCalId);
                 const isProvisional = !ligaCompleta && ["playin","semis","final","tercero"].includes(c.phase);
@@ -751,10 +751,10 @@ export default function App() {
             </div>
           )}
 
-          {/* Últimos resultados */}
+          {/* Ãšltimos resultados */}
           {recent.length > 0 && (
             <div className="card">
-              <div className="ct">Últimos Resultados</div>
+              <div className="ct">Ãšltimos Resultados</div>
               {recent.map(m => (
                 <div key={m.id} className="match-row">
                   <div className="match-teams">
@@ -774,21 +774,21 @@ export default function App() {
         </div>
       )}
 
-      {/* ── PORRA SOLIDARIA ── */}
+      {/* â”€â”€ PORRA SOLIDARIA â”€â”€ */}
       {view === "porra" && (
         <div className="sec fade">
           {!editMode && !editParticipant && (
             <>
               {/* Instrucciones */}
               <div className="card card-red">
-                <div className="ct">¿Cómo funciona?</div>
+                <div className="ct">Â¿CÃ³mo funciona?</div>
                 <div style={{ fontSize: ".82rem", color: "#b0a080", lineHeight: 1.6 }}>
                   <p>1. Elige <strong style={{ color: "#c92727" }}>1 pareja del Bombo 1</strong> y <strong style={{ color: "#c92727" }}>2 parejas de cada Bombo 2 y 3</strong>.</p>
                   <p style={{ marginTop: ".4rem" }}>2. Cada punto que saquen tus parejas en la <strong>liga, semifinales y final</strong> suma para ti.</p>
-                  <p style={{ marginTop: ".4rem" }}>3. El Play-In no puntúa para la porra.</p>
+                  <p style={{ marginTop: ".4rem" }}>3. El Play-In no puntÃºa para la porra.</p>
                   <p style={{ marginTop: ".4rem" }}>4. Sistema <strong>Champions</strong>: victoria 2-0 = 4pts, victoria 2-1 = 3pts ganador / 1pt perdedor.</p>
-                  <p style={{ marginTop: ".4rem" }}>🏆 Premio: {config.prizeDesc || "2 entradas para un partido de pelota"}</p>
-                  {config.charityName && <p style={{ marginTop: ".4rem" }}>❤️ Recaudación para: <strong>{config.charityName}</strong></p>}
+                  <p style={{ marginTop: ".4rem" }}>ðŸ† Premio: {config.prizeDesc || "2 entradas para un partido de pelota"}</p>
+                  {config.charityName && <p style={{ marginTop: ".4rem" }}>â¤ï¸ RecaudaciÃ³n para: <strong>{config.charityName}</strong></p>}
                 </div>
               </div>
 
@@ -798,21 +798,21 @@ export default function App() {
                   <div className="ct">Apuntar mi Porra</div>
                   {!config.registrationOpen && (
                     <div style={{ background: "#280a0a", border: "1px solid #c9272740", borderRadius: "6px", padding: ".7rem", marginBottom: ".9rem", color: "#c92727", fontSize: ".82rem" }}>
-                      ⚠️ Las inscripciones están cerradas. Contacta con la organización.
+                      âš ï¸ Las inscripciones estÃ¡n cerradas. Contacta con la organizaciÃ³n.
                     </div>
                   )}
                   <label className="lbl">Nombre</label>
                   <input className="inp" value={rName} onChange={e => setRName(e.target.value)} placeholder="Tu nombre" />
                   <label className="lbl">Apellidos</label>
                   <input className="inp" value={rSurname} onChange={e => setRSurname(e.target.value)} placeholder="Tus apellidos" />
-                  <label className="lbl">Contraseña (para editar tu porra)</label>
-                  <input className="inp" type="password" value={rPwd} onChange={e => setRPwd(e.target.value)} placeholder="Mínimo 6 caracteres" />
+                  <label className="lbl">ContraseÃ±a (para editar tu porra)</label>
+                  <input className="inp" type="password" value={rPwd} onChange={e => setRPwd(e.target.value)} placeholder="MÃ­nimo 6 caracteres" />
 
                   {/* Bombos */}
                   {BOMBOS.map(b => (
                     <div key={b.id} className="bombo-card" style={{ borderColor: b.color + "40", marginTop: ".9rem" }}>
                       <div className="bombo-title" style={{ color: b.color }}>
-                        {b.name} <span style={{ fontSize: ".75rem", color: "#555" }}>— {b.desc}</span>
+                        {b.name} <span style={{ fontSize: ".75rem", color: "#555" }}>â€” {b.desc}</span>
                       </div>
                       <div className="bombo-desc">
                         {b.id === 1
@@ -846,12 +846,12 @@ export default function App() {
                 </div>
               ) : (
                 <div className="card success-box">
-                  <div style={{ fontSize: "2.5rem" }}>✅</div>
+                  <div style={{ fontSize: "2.5rem" }}>âœ…</div>
                   <div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.4rem", color: "#5ec85e", marginTop: ".5rem" }}>
-                    ¡Porra enviada!
+                    Â¡Porra enviada!
                   </div>
                   <div style={{ color: "#555", fontSize: ".82rem", marginTop: ".4rem" }}>
-                    Pendiente de aprobación por la organización.
+                    Pendiente de aprobaciÃ³n por la organizaciÃ³n.
                   </div>
                   <button className="btn btn-g btn-sm" style={{ marginTop: "1rem" }}
                     onClick={() => { setROk(false); setView("home"); }}>Volver al inicio</button>
@@ -866,26 +866,26 @@ export default function App() {
                     <>
                       <label className="lbl">Nombre completo</label>
                       <input className="inp" value={editLoginName} onChange={e => setEditLoginName(e.target.value)} placeholder="Nombre tal como te registraste" />
-                      <label className="lbl">Contraseña</label>
+                      <label className="lbl">ContraseÃ±a</label>
                       <input className="inp" type="password" value={editLoginPwd} onChange={e => setEditLoginPwd(e.target.value)} />
                       {editLoginErr && <div style={{ color: "#c92727", fontSize: ".82rem", marginTop: ".5rem" }}>{editLoginErr}</div>}
                       <button className="btn btn-g btn-sm" style={{ marginTop: ".7rem" }} onClick={handleEditLogin}>Acceder</button>
                     </>
                   ) : (
-                    <div style={{ color: "#555", fontSize: ".82rem" }}>Las inscripciones están cerradas.</div>
+                    <div style={{ color: "#555", fontSize: ".82rem" }}>Las inscripciones estÃ¡n cerradas.</div>
                   )}
                 </div>
               )}
             </>
           )}
 
-          {/* Modo edición */}
+          {/* Modo ediciÃ³n */}
           {editParticipant && (
             <div className="card fade">
               <div className="ct">Editar porra de {editParticipant.name}</div>
               {BOMBOS.map(b => (
                 <div key={b.id} className="bombo-card" style={{ borderColor: b.color + "40", marginTop: ".9rem" }}>
-                  <div className="bombo-title" style={{ color: b.color }}>{b.name} — {b.desc}</div>
+                  <div className="bombo-title" style={{ color: b.color }}>{b.name} â€” {b.desc}</div>
                   <div className="bombo-desc">
                     {b.id === 1 ? `Elegida: ${rPicks.bombo1 || "ninguna"}` : `Elegidas: ${(rPicks[`bombo${b.id}`] || []).length} / ${b.pick}`}
                   </div>
@@ -906,7 +906,7 @@ export default function App() {
               ))}
               {rErr && <div style={{ color: "#c92727", fontSize: ".82rem", marginTop: ".7rem" }}>{rErr}</div>}
               {rOk ? (
-                <div style={{ color: "#5ec85e", marginTop: ".7rem" }}>✅ Cambios guardados.</div>
+                <div style={{ color: "#5ec85e", marginTop: ".7rem" }}>âœ… Cambios guardados.</div>
               ) : (
                 <div className="row" style={{ marginTop: "1rem" }}>
                   <button className="btn" onClick={handleSaveEdit}>Guardar cambios</button>
@@ -922,7 +922,7 @@ export default function App() {
         </div>
       )}
 
-      {/* ── CALENDARIO ── */}
+      {/* â”€â”€ CALENDARIO â”€â”€ */}
       {view === "calendario" && (
         <div className="sec fade">
           <div className="card">
@@ -982,13 +982,13 @@ export default function App() {
         </div>
       )}
 
-      {/* ── LIGA ── */}
+      {/* â”€â”€ LIGA â”€â”€ */}
       {view === "liga" && (
         <div className="sec fade">
           <div className="card">
-            <div className="ct">Clasificación Liga</div>
+            <div className="ct">ClasificaciÃ³n Liga</div>
             <div style={{ fontSize: ".7rem", color: "#444", marginBottom: ".5rem" }}>
-              Desempate: 1º enfrentamiento directo · 2º partidos ganados · 3º diferencia de tantos
+              Desempate: 1Âº enfrentamiento directo Â· 2Âº partidos ganados Â· 3Âº diferencia de tantos
             </div>
             <div className="tabla-row tabla-hdr" style={{ gridTemplateColumns: "1.2rem 1fr 2rem 2rem 2rem 2.5rem 3rem" }}>
               <span>#</span><span>Pareja</span><span style={{ textAlign: "center" }}>J</span>
@@ -998,8 +998,8 @@ export default function App() {
             </div>
             {tablaTorneo.map((row, i) => (
               <div key={row.pareja}>
-                {i === 2 && <div style={{ borderTop: "1px dashed #c9272730", margin: ".3rem 0", fontSize: ".65rem", color: "#c92727", paddingLeft: ".3rem" }}>▼ Play-In</div>}
-                {i === 10 && <div style={{ borderTop: "1px dashed #33333380", margin: ".3rem 0", fontSize: ".65rem", color: "#333", paddingLeft: ".3rem" }}>▼ Eliminados</div>}
+                {i === 2 && <div style={{ borderTop: "1px dashed #c9272730", margin: ".3rem 0", fontSize: ".65rem", color: "#c92727", paddingLeft: ".3rem" }}>â–¼ Play-In</div>}
+                {i === 10 && <div style={{ borderTop: "1px dashed #33333380", margin: ".3rem 0", fontSize: ".65rem", color: "#333", paddingLeft: ".3rem" }}>â–¼ Eliminados</div>}
                 <div className="tabla-row" style={{
                   gridTemplateColumns: "1.2rem 1fr 2rem 2rem 2rem 2.5rem 3rem",
                   background: i < 2 ? "#0a1a08" : i < 10 ? "#06080e" : "#060606",
@@ -1018,7 +1018,7 @@ export default function App() {
               </div>
             ))}
 
-            {/* Cruces Play-In automáticos */}
+            {/* Cruces Play-In automÃ¡ticos */}
             {tablaTorneo.filter(r => r.jugados > 0).length >= 3 && (
               <div style={{ marginTop: "1rem", background: "#080a18", border: "1px solid #223366", borderRadius: "6px", padding: ".8rem" }}>
                 <div style={{ fontFamily: "'Bebas Neue'", color: "#4466aa", fontSize: "1rem", letterSpacing: ".05em", marginBottom: ".6rem" }}>
@@ -1038,84 +1038,84 @@ export default function App() {
                   </div>
                 ))}
                 <div style={{ fontSize: ".65rem", color: "#333", marginTop: ".5rem" }}>
-                  Semifinales: 1º vs Peor Play-In · 2º vs Mejor Play-In
+                  Semifinales: 1Âº vs Peor Play-In Â· 2Âº vs Mejor Play-In
                 </div>
               </div>
             )}
             <div style={{ fontSize: ".68rem", color: "#333", marginTop: ".7rem" }}>
-              🟢 Top 2 → Semifinales · 🔵 3º–10º → Play-In · ⚫ 11º–18º → Eliminados
+              ðŸŸ¢ Top 2 â†’ Semifinales Â· ðŸ”µ 3Âºâ€“10Âº â†’ Play-In Â· âš« 11Âºâ€“18Âº â†’ Eliminados
             </div>
           </div>
         </div>
       )}
 
-      {/* ── REGLAMENTO ── */}
+      {/* â”€â”€ REGLAMENTO â”€â”€ */}
       {view === "reglamento" && (
         <div className="sec fade">
           <div className="card">
             <div className="ct">Normas Generales</div>
             <div style={{ fontSize: ".82rem", color: "#b0a080", lineHeight: 1.7 }}>
-              <p>• Cada participante abona <strong style={{color:"#e2d9c5"}}>10€</strong> en Recepción del Club para costear las 25 pelotas del Campeonato.</p>
-              <p>• Las parejas se eligieron de forma consensuada para equilibrar el torneo.</p>
-              <p>• Cada pareja debe asistir con su <strong style={{color:"#e2d9c5"}}>paleta de cuero</strong>. Es obligatorio el uso de <strong style={{color:"#e2d9c5"}}>casco, gafas y pantalón blanco</strong>.</p>
-              <p>• Se recomienda que la pareja local vista de <strong style={{color:"#c92727"}}>rojo</strong> y la visitante de <strong style={{color:"#4466aa"}}>azul</strong>.</p>
-              <p>• La pareja <strong style={{color:"#e2d9c5"}}>ganadora</strong> notifica el resultado en el chat de WhatsApp y devuelve las pelotas a Recepción.</p>
-              <p>• Los partidos son arbitrados por los propios participantes salvo que ambas parejas o la Organización decidan lo contrario.</p>
+              <p>â€¢ Cada participante abona <strong style={{color:"#e2d9c5"}}>10â‚¬</strong> en RecepciÃ³n del Club para costear las 25 pelotas del Campeonato.</p>
+              <p>â€¢ Las parejas se eligieron de forma consensuada para equilibrar el torneo.</p>
+              <p>â€¢ Cada pareja debe asistir con su <strong style={{color:"#e2d9c5"}}>paleta de cuero</strong>. Es obligatorio el uso de <strong style={{color:"#e2d9c5"}}>casco, gafas y pantalÃ³n blanco</strong>.</p>
+              <p>â€¢ Se recomienda que la pareja local vista de <strong style={{color:"#c92727"}}>rojo</strong> y la visitante de <strong style={{color:"#4466aa"}}>azul</strong>.</p>
+              <p>â€¢ La pareja <strong style={{color:"#e2d9c5"}}>ganadora</strong> notifica el resultado en el chat de WhatsApp y devuelve las pelotas a RecepciÃ³n.</p>
+              <p>â€¢ Los partidos son arbitrados por los propios participantes salvo que ambas parejas o la OrganizaciÃ³n decidan lo contrario.</p>
             </div>
           </div>
 
           <div className="card">
             <div className="ct">Fases del Torneo</div>
             <div style={{ fontSize: ".82rem", color: "#b0a080", lineHeight: 1.7 }}>
-              <p>• La <strong style={{color:"#e2d9c5"}}>Fase Liga</strong> dura 5 semanas (11 jornadas). Sistema Champions:</p>
+              <p>â€¢ La <strong style={{color:"#e2d9c5"}}>Fase Liga</strong> dura 5 semanas (11 jornadas). Sistema Champions:</p>
               <div style={{ background: "#06080e", border: "1px solid #1c2135", borderRadius: "6px", padding: ".6rem .9rem", margin: ".5rem 0", display: "flex", gap: "1.5rem" }}>
                 <div style={{ textAlign: "center" }}><div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.5rem", color: "#c92727" }}>4</div><div style={{ fontSize: ".65rem", color: "#555" }}>Victoria 2-0</div></div>
                 <div style={{ textAlign: "center" }}><div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.5rem", color: "#c9a227" }}>3</div><div style={{ fontSize: ".65rem", color: "#555" }}>Ganador 2-1</div></div>
                 <div style={{ textAlign: "center" }}><div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.5rem", color: "#5ec85e" }}>1</div><div style={{ fontSize: ".65rem", color: "#555" }}>Perdedor 2-1</div></div>
               </div>
-              <p>• Desempate: enfrentamiento directo → partidos ganados → diferencia de tantos → sorteo.</p>
-              <p>• <strong style={{color:"#5ec85e"}}>1º y 2º</strong> → Semifinales directas.</p>
-              <p>• <strong style={{color:"#4466aa"}}>3º al 10º</strong> → Play-In. Los 2 ganadores van a Semifinales.</p>
-              <p>• <strong style={{color:"#e2d9c5"}}>Semifinal S1:</strong> 1º vs Peor clasificado Play-In.</p>
-              <p>• <strong style={{color:"#e2d9c5"}}>Semifinal S2:</strong> 2º vs Mejor clasificado Play-In.</p>
-              <p>• Si un partido no se disputa antes de la fecha límite, gana la pareja que no impide el juego (2-0). Si ambas no pueden, sorteo.</p>
+              <p>â€¢ Desempate: enfrentamiento directo â†’ partidos ganados â†’ diferencia de tantos â†’ sorteo.</p>
+              <p>â€¢ <strong style={{color:"#5ec85e"}}>1Âº y 2Âº</strong> â†’ Semifinales directas.</p>
+              <p>â€¢ <strong style={{color:"#4466aa"}}>3Âº al 10Âº</strong> â†’ Play-In. Los 2 ganadores van a Semifinales.</p>
+              <p>â€¢ <strong style={{color:"#e2d9c5"}}>Semifinal S1:</strong> 1Âº vs Peor clasificado Play-In.</p>
+              <p>â€¢ <strong style={{color:"#e2d9c5"}}>Semifinal S2:</strong> 2Âº vs Mejor clasificado Play-In.</p>
+              <p>â€¢ Si un partido no se disputa antes de la fecha lÃ­mite, gana la pareja que no impide el juego (2-0). Si ambas no pueden, sorteo.</p>
             </div>
           </div>
 
           <div className="card">
             <div className="ct">Reglamento de Juego</div>
             <div style={{ fontSize: ".82rem", color: "#b0a080", lineHeight: 1.7 }}>
-              <p>• <strong style={{color:"#e2d9c5"}}>Pelotas:</strong> Zulaika n2. Cada bolsa tiene 3 pelotas. La pareja que saca en el primer set elige pelota; se juega todo el set con ella. Solo se cambia si ambas parejas acuerdan que está rota.</p>
-              <p>• <strong style={{color:"#e2d9c5"}}>Saque:</strong> Por detrás de la raya del 8½. La pelota debe botar superando el 4 sin pasar del 7. Se permite repetir una vez si pasa del 7. Si se falla, se pierde el tanto.</p>
-              <p>• <strong style={{color:"#e2d9c5"}}>Rayas:</strong> Si la pelota toca las rayas delimitadoras del frontón, es mala y se pierde el tanto.</p>
-              <p>• <strong style={{color:"#e2d9c5"}}>Sets:</strong> A <strong>15 tantos</strong> (sets 1 y 2). Si hay tercer set, a <strong>10 tantos</strong>. Gana la pareja que gane 2 sets.</p>
-              <p>• <strong style={{color:"#e2d9c5"}}>Descanso:</strong> 1 minuto por set, solo cuando la pareja solicitante tiene el saque.</p>
-              <p>• El calentamiento empieza a la hora en punto. Se dan 5 minutos para el primer saque.</p>
+              <p>â€¢ <strong style={{color:"#e2d9c5"}}>Pelotas:</strong> Zulaika n2. Cada bolsa tiene 3 pelotas. La pareja que saca en el primer set elige pelota; se juega todo el set con ella. Solo se cambia si ambas parejas acuerdan que estÃ¡ rota.</p>
+              <p>â€¢ <strong style={{color:"#e2d9c5"}}>Saque:</strong> Por detrÃ¡s de la raya del 8Â½. La pelota debe botar superando el 4 sin pasar del 7. Se permite repetir una vez si pasa del 7. Si se falla, se pierde el tanto.</p>
+              <p>â€¢ <strong style={{color:"#e2d9c5"}}>Rayas:</strong> Si la pelota toca las rayas delimitadoras del frontÃ³n, es mala y se pierde el tanto.</p>
+              <p>â€¢ <strong style={{color:"#e2d9c5"}}>Sets:</strong> A <strong>15 tantos</strong> (sets 1 y 2). Si hay tercer set, a <strong>10 tantos</strong>. Gana la pareja que gane 2 sets.</p>
+              <p>â€¢ <strong style={{color:"#e2d9c5"}}>Descanso:</strong> 1 minuto por set, solo cuando la pareja solicitante tiene el saque.</p>
+              <p>â€¢ El calentamiento empieza a la hora en punto. Se dan 5 minutos para el primer saque.</p>
             </div>
           </div>
 
           <div className="card">
             <div className="ct">Fechas Clave</div>
             <div style={{ fontSize: ".82rem", color: "#b0a080", lineHeight: 1.7 }}>
-              <p>• <strong style={{color:"#e2d9c5"}}>Inicio Liga:</strong> Lunes 13 de abril de 2026</p>
-              <p>• <strong style={{color:"#e2d9c5"}}>Fin Liga:</strong> 14 de mayo de 2026</p>
-              <p>• <strong style={{color:"#e2d9c5"}}>Play-In:</strong> 18–21 de mayo de 2026</p>
-              <p>• <strong style={{color:"#e2d9c5"}}>Semifinales:</strong> Martes 26 de mayo de 2026</p>
-              <p>• <strong style={{color:"#e2d9c5"}}>3º y 4º puesto:</strong> Jueves 28 de mayo · 19:30</p>
-              <p>• <strong style={{color:"#c92727"}}>Final:</strong> Jueves 28 de mayo · 20:15</p>
-              <p>• <strong style={{color:"#c9a227"}}>Entrega de Premios + Lunch:</strong> Tras la Final en el Salón Social</p>
+              <p>â€¢ <strong style={{color:"#e2d9c5"}}>Inicio Liga:</strong> Lunes 13 de abril de 2026</p>
+              <p>â€¢ <strong style={{color:"#e2d9c5"}}>Fin Liga:</strong> 14 de mayo de 2026</p>
+              <p>â€¢ <strong style={{color:"#e2d9c5"}}>Play-In:</strong> 18â€“21 de mayo de 2026</p>
+              <p>â€¢ <strong style={{color:"#e2d9c5"}}>Semifinales:</strong> Martes 26 de mayo de 2026</p>
+              <p>â€¢ <strong style={{color:"#e2d9c5"}}>3Âº y 4Âº puesto:</strong> Jueves 28 de mayo Â· 19:30</p>
+              <p>â€¢ <strong style={{color:"#c92727"}}>Final:</strong> Jueves 28 de mayo Â· 20:15</p>
+              <p>â€¢ <strong style={{color:"#c9a227"}}>Entrega de Premios + Lunch:</strong> Tras la Final en el SalÃ³n Social</p>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── RANKING PORRA ── */}
+      {/* â”€â”€ RANKING PORRA â”€â”€ */}
       {view === "ranking" && (
         <div className="sec fade">
           <div className="card">
             <div className="ct">Ranking Porra Solidaria</div>
             {leaderboard.length === 0 ? (
-              <div style={{ color: "#444", fontSize: ".85rem" }}>Sin participantes aprobados aún.</div>
+              <div style={{ color: "#444", fontSize: ".85rem" }}>Sin participantes aprobados aÃºn.</div>
             ) : leaderboard.map((p, i) => (
               <div key={p.id}>
                 <div className="lb-row" style={{
@@ -1161,35 +1161,35 @@ export default function App() {
         </div>
       )}
 
-      {/* ── INSTALAR ── */}
+      {/* â”€â”€ INSTALAR â”€â”€ */}
       {view === "instalar" && (
         <div className="sec fade">
           {isStandalone ? (
             <div className="card" style={{ textAlign: "center", padding: "2rem" }}>
-              <div style={{ fontSize: "3rem" }}>✅</div>
+              <div style={{ fontSize: "3rem" }}>âœ…</div>
               <div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.5rem", color: "#5ec85e", marginTop: ".5rem" }}>
-                ¡App ya instalada!
+                Â¡App ya instalada!
               </div>
               <div style={{ color: "#555", fontSize: ".85rem", marginTop: ".4rem" }}>
-                Estás usando la app en modo instalado.
+                EstÃ¡s usando la app en modo instalado.
               </div>
             </div>
           ) : (
             <>
               <div className="card card-red" style={{ textAlign: "center", padding: "1.5rem 1.2rem" }}>
-                <div style={{ fontSize: "3rem" }}>📲</div>
+                <div style={{ fontSize: "3rem" }}>ðŸ“²</div>
                 <div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.6rem", color: "#c92727", marginTop: ".4rem", letterSpacing: ".08em" }}>
                   Instala la App
                 </div>
                 <div style={{ color: "#666", fontSize: ".82rem", marginTop: ".3rem" }}>
-                  Accede rápido desde tu móvil sin abrir el navegador
+                  Accede rÃ¡pido desde tu mÃ³vil sin abrir el navegador
                 </div>
               </div>
 
               {/* Android / Chrome */}
               {deferredPrompt && (
                 <div className="card" style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "1.8rem", marginBottom: ".5rem" }}>🤖</div>
+                  <div style={{ fontSize: "1.8rem", marginBottom: ".5rem" }}>ðŸ¤–</div>
                   <div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.2rem", color: "#e2d9c5", marginBottom: ".8rem" }}>
                     Android / Chrome
                   </div>
@@ -1199,7 +1199,7 @@ export default function App() {
                     await deferredPrompt.userChoice;
                     setDeferredPrompt(null);
                   }}>
-                    📲 Instalar en este dispositivo
+                    ðŸ“² Instalar en este dispositivo
                   </button>
                 </div>
               )}
@@ -1207,17 +1207,17 @@ export default function App() {
               {/* iOS */}
               <div className="card">
                 <div style={{ display: "flex", alignItems: "center", gap: ".7rem", marginBottom: ".9rem" }}>
-                  <span style={{ fontSize: "1.8rem" }}>🍎</span>
+                  <span style={{ fontSize: "1.8rem" }}>ðŸŽ</span>
                   <div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.2rem", color: "#e2d9c5" }}>
                     iPhone / iPad (Safari)
                   </div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: ".7rem" }}>
                   {[
-                    { icon: "1️⃣", text: "Abre esta página en Safari (no Chrome)" },
-                    { icon: "2️⃣", text: 'Pulsa el botón compartir ⬆ (abajo en iPhone, arriba en iPad)' },
-                    { icon: "3️⃣", text: '"Añadir a pantalla de inicio"' },
-                    { icon: "4️⃣", text: 'Pulsa "Añadir" — ¡listo!' },
+                    { icon: "1ï¸âƒ£", text: "Abre esta pÃ¡gina en Safari (no Chrome)" },
+                    { icon: "2ï¸âƒ£", text: 'Pulsa el botÃ³n compartir â¬† (abajo en iPhone, arriba en iPad)' },
+                    { icon: "3ï¸âƒ£", text: '"AÃ±adir a pantalla de inicio"' },
+                    { icon: "4ï¸âƒ£", text: 'Pulsa "AÃ±adir" â€” Â¡listo!' },
                   ].map((s, i) => (
                     <div key={i} style={{ display: "flex", gap: ".7rem", alignItems: "flex-start", background: "#06080e", border: "1px solid #1c2135", borderRadius: "6px", padding: ".6rem .8rem" }}>
                       <span style={{ fontSize: "1.1rem" }}>{s.icon}</span>
@@ -1231,17 +1231,17 @@ export default function App() {
               {!deferredPrompt && (
                 <div className="card">
                   <div style={{ display: "flex", alignItems: "center", gap: ".7rem", marginBottom: ".9rem" }}>
-                    <span style={{ fontSize: "1.8rem" }}>🤖</span>
+                    <span style={{ fontSize: "1.8rem" }}>ðŸ¤–</span>
                     <div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.2rem", color: "#e2d9c5" }}>
                       Android / Chrome
                     </div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: ".7rem" }}>
                     {[
-                      { icon: "1️⃣", text: "Abre esta página en Chrome" },
-                      { icon: "2️⃣", text: "Pulsa el menú ⋮ (tres puntos, arriba a la derecha)" },
-                      { icon: "3️⃣", text: '"Añadir a pantalla de inicio" o "Instalar app"' },
-                      { icon: "4️⃣", text: 'Confirma — ¡listo!' },
+                      { icon: "1ï¸âƒ£", text: "Abre esta pÃ¡gina en Chrome" },
+                      { icon: "2ï¸âƒ£", text: "Pulsa el menÃº â‹® (tres puntos, arriba a la derecha)" },
+                      { icon: "3ï¸âƒ£", text: '"AÃ±adir a pantalla de inicio" o "Instalar app"' },
+                      { icon: "4ï¸âƒ£", text: 'Confirma â€” Â¡listo!' },
                     ].map((s, i) => (
                       <div key={i} style={{ display: "flex", gap: ".7rem", alignItems: "flex-start", background: "#06080e", border: "1px solid #1c2135", borderRadius: "6px", padding: ".6rem .8rem" }}>
                         <span style={{ fontSize: "1.1rem" }}>{s.icon}</span>
@@ -1258,7 +1258,7 @@ export default function App() {
                   {window.location.hostname}
                 </div>
                 <div style={{ color: "#333", fontSize: ".72rem", marginTop: ".3rem" }}>
-                  Compártela con los participantes
+                  CompÃ¡rtela con los participantes
                 </div>
               </div>
             </>
@@ -1266,7 +1266,7 @@ export default function App() {
         </div>
       )}
 
-      {/* ── ADMIN ── */}
+      {/* â”€â”€ ADMIN â”€â”€ */}
       {view === "admin" && (
         <div className="sec fade">
           {!adminUser ? (
@@ -1274,7 +1274,7 @@ export default function App() {
               <div className="ct">Admin</div>
               <label className="lbl">Email</label>
               <input className="inp" type="email" value={adminEmail} onChange={e => setAdminEmail(e.target.value)} />
-              <label className="lbl">Contraseña</label>
+              <label className="lbl">ContraseÃ±a</label>
               <input className="inp" type="password" value={adminPass} onChange={e => setAdminPass(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && handleAdminLogin()} />
               {adminErr && <div style={{ color: "#c92727", fontSize: ".82rem", marginTop: ".5rem" }}>{adminErr}</div>}
@@ -1286,8 +1286,8 @@ export default function App() {
             <>
               {/* Config */}
               <div className="card">
-                <div className="ct">Configuración</div>
-                <label className="lbl">Inscripción</label>
+                <div className="ct">ConfiguraciÃ³n</div>
+                <label className="lbl">InscripciÃ³n</label>
                 <div className="row">
                   <button className={`btn btn-sm ${config.registrationOpen ? "" : "btn-g"}`}
                     onClick={() => saveConfig({ registrationOpen: true })}>Abrir</button>
@@ -1300,8 +1300,8 @@ export default function App() {
                 <label className="lbl">Premio</label>
                 <input className="inp" value={config.prizeDesc || ""} placeholder="ej: 2 entradas para un partido de pelota"
                   onChange={e => saveConfig({ prizeDesc: e.target.value })} />
-                <label className="lbl">Asociación beneficiaria</label>
-                <input className="inp" value={config.charityName || ""} placeholder="Nombre de la asociación"
+                <label className="lbl">AsociaciÃ³n beneficiaria</label>
+                <input className="inp" value={config.charityName || ""} placeholder="Nombre de la asociaciÃ³n"
                   onChange={e => saveConfig({ charityName: e.target.value })} />
               </div>
 
@@ -1326,8 +1326,8 @@ export default function App() {
                         const resolved = resolveTeams(c, tablaTorneo, matchByCalId);
                         return (
                           <option key={c.id} value={c.id}>
-                            {c.id} · {resolved.local} vs {resolved.visitante} ({formatFecha(c.fecha)} {c.hora})
-                            {matchByCalId[c.id]?.result?.winner ? " ✓" : ""}
+                            {c.id} Â· {resolved.local} vs {resolved.visitante} ({formatFecha(c.fecha)} {c.hora})
+                            {matchByCalId[c.id]?.result?.winner ? " âœ“" : ""}
                           </option>
                         );
                       })}
@@ -1355,20 +1355,20 @@ export default function App() {
                             <strong style={{ color:"#e2d9c5" }}>{localName}</strong> vs <strong style={{ color:"#e2d9c5" }}>{visitName}</strong>
                             <span className={phaseClass(nm.phase)} style={{ marginLeft:".5rem" }}>{phaseName(nm.phase)}</span>
                           </div>
-                          <label className="lbl">Sets · 1 y 2 a 15 tantos · 3 a 10 tantos</label>
+                          <label className="lbl">Sets Â· 1 y 2 a 15 tantos Â· 3 a 10 tantos</label>
                           <div className="row" style={{ marginBottom:".5rem" }}>
                             <span style={{ color:"#555", fontSize:".75rem", minWidth:"60px" }}>Set 1 (15):</span>
                             <input className="num-inp" type="number" min="0" max="15" value={s1L} onChange={e => setSLocal(a=>{const n=[...a];n[0]=e.target.value;return n;})} />
                             <span style={{ color:"#444" }}>-</span>
                             <input className="num-inp" type="number" min="0" max="15" value={s1V} onChange={e => setSVisit(a=>{const n=[...a];n[0]=e.target.value;return n;})} />
-                            {w1 && <span style={{ fontSize:".72rem", color:w1==="local"?"#c92727":"#5ec85e" }}>✓ {w1==="local"?localName.split(" - ")[0]:visitName.split(" - ")[0]}</span>}
+                            {w1 && <span style={{ fontSize:".72rem", color:w1==="local"?"#c92727":"#5ec85e" }}>âœ“ {w1==="local"?localName.split(" - ")[0]:visitName.split(" - ")[0]}</span>}
                           </div>
                           <div className="row" style={{ marginBottom:".5rem" }}>
                             <span style={{ color:"#555", fontSize:".75rem", minWidth:"60px" }}>Set 2 (15):</span>
                             <input className="num-inp" type="number" min="0" max="15" value={s2L} onChange={e => setSLocal(a=>{const n=[...a];n[1]=e.target.value;return n;})} />
                             <span style={{ color:"#444" }}>-</span>
                             <input className="num-inp" type="number" min="0" max="15" value={s2V} onChange={e => setSVisit(a=>{const n=[...a];n[1]=e.target.value;return n;})} />
-                            {w2 && <span style={{ fontSize:".72rem", color:w2==="local"?"#c92727":"#5ec85e" }}>✓ {w2==="local"?localName.split(" - ")[0]:visitName.split(" - ")[0]}</span>}
+                            {w2 && <span style={{ fontSize:".72rem", color:w2==="local"?"#c92727":"#5ec85e" }}>âœ“ {w2==="local"?localName.split(" - ")[0]:visitName.split(" - ")[0]}</span>}
                           </div>
                           {needs3 && (
                             <div className="row" style={{ marginBottom:".5rem" }}>
@@ -1376,13 +1376,13 @@ export default function App() {
                               <input className="num-inp" type="number" min="0" max="10" value={s3L} onChange={e => setSLocal(a=>{const n=[...a];n[2]=e.target.value;return n;})} />
                               <span style={{ color:"#444" }}>-</span>
                               <input className="num-inp" type="number" min="0" max="10" value={s3V} onChange={e => setSVisit(a=>{const n=[...a];n[2]=e.target.value;return n;})} />
-                              {w3 && <span style={{ fontSize:".72rem", color:w3==="local"?"#c92727":"#5ec85e" }}>✓ {w3==="local"?localName.split(" - ")[0]:visitName.split(" - ")[0]}</span>}
+                              {w3 && <span style={{ fontSize:".72rem", color:w3==="local"?"#c92727":"#5ec85e" }}>âœ“ {w3==="local"?localName.split(" - ")[0]:visitName.split(" - ")[0]}</span>}
                             </div>
                           )}
-                          {needs3 && !setOk(s3L,s3V) && <div style={{ color:"#c9a227", fontSize:".78rem", marginTop:".2rem" }}>⚠️ Empate 1-1 — introduce el Set 3 (a 10 tantos)</div>}
+                          {needs3 && !setOk(s3L,s3V) && <div style={{ color:"#c9a227", fontSize:".78rem", marginTop:".2rem" }}>âš ï¸ Empate 1-1 â€” introduce el Set 3 (a 10 tantos)</div>}
                           {autoWinner && (
                             <div style={{ background:"#0a1a08", border:"1px solid #286a28", borderRadius:"6px", padding:".6rem .9rem", marginTop:".6rem", display:"flex", alignItems:"center", gap:".6rem" }}>
-                              <span style={{ fontSize:"1.1rem" }}>✅</span>
+                              <span style={{ fontSize:"1.1rem" }}>âœ…</span>
                               <div>
                                 <div style={{ color:"#5ec85e", fontSize:".75rem", fontFamily:"'Bebas Neue'", letterSpacing:".05em" }}>Ganador detectado</div>
                                 <div style={{ color:"#e2d9c5", fontSize:".85rem", fontWeight:600 }}>
@@ -1397,10 +1397,10 @@ export default function App() {
                             {matchByCalId[nm.matchId]?.result?.winner && (
                               <button className="btn-del" onClick={async () => {
                                 const m = matchByCalId[nm.matchId];
-                                if (m && window.confirm("¿Borrar este resultado?")) await deleteDoc(doc(db,"matches",m.id));
+                                if (m && window.confirm("Â¿Borrar este resultado?")) await deleteDoc(doc(db,"matches",m.id));
                                 setNm({ matchId:null, local:"", visitante:"", sets:[], winner:"", phase:"liga", fecha:"" });
                                 setSLocal(["","",""]); setSVisit(["","",""]);
-                              }}>🗑 Borrar resultado</button>
+                              }}>ðŸ—‘ Borrar resultado</button>
                             )}
                           </div>
                         </>
@@ -1413,7 +1413,7 @@ export default function App() {
               {/* Participantes pendientes */}
               {pending.length > 0 && (
                 <div className="card">
-                  <div className="ct">Pendientes de aprobación ({pending.length})</div>
+                  <div className="ct">Pendientes de aprobaciÃ³n ({pending.length})</div>
                   {pending.map(p => (
                     <div key={p.id} style={{ background: "#06080e", border: "1px solid #1c2135", borderRadius: "6px", padding: ".7rem", marginBottom: ".5rem" }}>
                       <div style={{ fontWeight: 600, marginBottom: ".4rem" }}>{p.name}</div>
@@ -1423,8 +1423,8 @@ export default function App() {
                         ))}
                       </div>
                       <div className="row">
-                        <button className="btn btn-ok btn-sm" onClick={() => handleApprove(p.id)}>✅ Aprobar</button>
-                        <button className="btn btn-danger btn-sm" onClick={() => handleReject(p.id)}>❌ Rechazar</button>
+                        <button className="btn btn-ok btn-sm" onClick={() => handleApprove(p.id)}>âœ… Aprobar</button>
+                        <button className="btn btn-danger btn-sm" onClick={() => handleReject(p.id)}>âŒ Rechazar</button>
                       </div>
                     </div>
                   ))}
@@ -1442,22 +1442,22 @@ export default function App() {
                         {computeParticipantePuntos(p, matches).pts} pts
                       </span>
                       <button className="btn-del" onClick={async () => {
-                        if (await reauth() && window.confirm(`¿Borrar a ${p.name}?`))
+                        if (await reauth() && window.confirm(`Â¿Borrar a ${p.name}?`))
                           deleteDoc(doc(db, "participants", p.id));
-                      }}>🗑</button>
+                      }}>ðŸ—‘</button>
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* Sesión */}
+              {/* SesiÃ³n */}
               <div className="card">
-                <div className="ct">Sesión Admin</div>
+                <div className="ct">SesiÃ³n Admin</div>
                 <div style={{ color: "#555", fontSize: ".82rem", marginBottom: ".7rem" }}>
                   Conectado como: <strong style={{ color: "#c92727" }}>{adminUser?.email}</strong>
                 </div>
                 <div className="row">
-                  <button className="btn btn-g btn-sm" onClick={handleAdminLogout}>Cerrar sesión</button>
+                  <button className="btn btn-g btn-sm" onClick={handleAdminLogout}>Cerrar sesiÃ³n</button>
                   <button className="btn btn-g btn-sm" onClick={() => {
                     const backup = {
                       fecha: new Date().toISOString(),
@@ -1470,7 +1470,7 @@ export default function App() {
                     a.href = URL.createObjectURL(blob);
                     a.download = `paleta-cuero-backup-${new Date().toISOString().slice(0, 10)}.json`;
                     a.click();
-                  }}>💾 Backup JSON</button>
+                  }}>ðŸ’¾ Backup JSON</button>
                 </div>
               </div>
 
@@ -1481,7 +1481,7 @@ export default function App() {
                 </div>
                 <button className="btn btn-danger" onClick={async () => {
                   if (!await reauth()) return;
-                  if (!window.confirm("¿Borrar TODOS los datos? Esta acción no se puede deshacer.")) return;
+                  if (!window.confirm("Â¿Borrar TODOS los datos? Esta acciÃ³n no se puede deshacer.")) return;
                   await Promise.all([
                     setDoc(doc(db, "config", "settings"), {
                       registrationOpen: true, charityName: "", prizeDesc: "",
@@ -1497,7 +1497,7 @@ export default function App() {
         </div>
       )}
 
-      <button className="refresh-btn" onClick={() => window.location.reload()} title="Actualizar">↻</button>
+      <button className="refresh-btn" onClick={() => window.location.reload()} title="Actualizar">â†»</button>
     </div>
   );
 }
