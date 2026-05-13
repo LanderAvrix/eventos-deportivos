@@ -422,7 +422,6 @@ export default function App() {
 
   // UI
   const [expandedLb, setExpandedLb] = useState(null);
-  const [tablaTab, setTablaTab] = useState("porra");
   const [calFilter, setCalFilter] = useState("todas");
 
   // Firestore subscriptions
@@ -654,11 +653,13 @@ export default function App() {
       {/* NAV */}
       <nav className="nav">
         {[
-          { id: "home", label: "🏠 Inicio" },
-          { id: "porra", label: "🎯 Mi Porra" },
+          { id: "home",       label: "🏠 Inicio" },
           { id: "calendario", label: "📅 Calendario" },
-          { id: "clasificacion", label: "🏆 Clasificación" },
-          { id: "instalar", label: "📲 Instalar" },
+          { id: "liga",       label: "🏆 Liga" },
+          { id: "reglamento", label: "📋 Reglamento" },
+          { id: "porra",      label: "🎯 Porra Solidaria" },
+          { id: "ranking",    label: "🥇 Ranking Porra" },
+          { id: "instalar",   label: "📲 Instalar" },
           ...(adminUnlocked ? [{ id: "admin", label: "⚙️ Admin" }] : []),
         ].map(t => (
           <button key={t.id} className={`nb${view === t.id ? " on" : ""}`}
@@ -716,7 +717,7 @@ export default function App() {
                 </div>
               ))}
               <button className="btn btn-g btn-sm" style={{ marginTop: ".5rem" }}
-                onClick={() => setView("clasificacion")}>Ver clasificación completa →</button>
+                onClick={() => setView("liga")}>Ver clasificación completa →</button>
             </div>
           )}
 
@@ -773,7 +774,7 @@ export default function App() {
         </div>
       )}
 
-      {/* ── PORRA ── */}
+      {/* ── PORRA SOLIDARIA ── */}
       {view === "porra" && (
         <div className="sec fade">
           {!editMode && !editParticipant && (
@@ -981,130 +982,182 @@ export default function App() {
         </div>
       )}
 
-      {/* ── CLASIFICACIÓN ── */}
-      {view === "clasificacion" && (
+      {/* ── LIGA ── */}
+      {view === "liga" && (
         <div className="sec fade">
-          <div className="row" style={{ marginBottom: ".8rem" }}>
-            <button className={`chip${tablaTab === "porra" ? " on" : ""}`} onClick={() => setTablaTab("porra")}>🎯 Ranking Porra</button>
-            <button className={`chip${tablaTab === "torneo" ? " on" : ""}`} onClick={() => setTablaTab("torneo")}>🏆 Liga Torneo</button>
+          <div className="card">
+            <div className="ct">Clasificación Liga</div>
+            <div style={{ fontSize: ".7rem", color: "#444", marginBottom: ".5rem" }}>
+              Desempate: 1º enfrentamiento directo · 2º partidos ganados · 3º diferencia de tantos
+            </div>
+            <div className="tabla-row tabla-hdr" style={{ gridTemplateColumns: "1.2rem 1fr 2rem 2rem 2rem 2.5rem 3rem" }}>
+              <span>#</span><span>Pareja</span><span style={{ textAlign: "center" }}>J</span>
+              <span style={{ textAlign: "center" }}>G</span><span style={{ textAlign: "center" }}>P</span>
+              <span style={{ textAlign: "center" }}>Pts</span>
+              <span style={{ textAlign: "center" }}>Dif</span>
+            </div>
+            {tablaTorneo.map((row, i) => (
+              <div key={row.pareja}>
+                {i === 2 && <div style={{ borderTop: "1px dashed #c9272730", margin: ".3rem 0", fontSize: ".65rem", color: "#c92727", paddingLeft: ".3rem" }}>▼ Play-In</div>}
+                {i === 10 && <div style={{ borderTop: "1px dashed #33333380", margin: ".3rem 0", fontSize: ".65rem", color: "#333", paddingLeft: ".3rem" }}>▼ Eliminados</div>}
+                <div className="tabla-row" style={{
+                  gridTemplateColumns: "1.2rem 1fr 2rem 2rem 2rem 2.5rem 3rem",
+                  background: i < 2 ? "#0a1a08" : i < 10 ? "#06080e" : "#060606",
+                  borderLeft: i < 2 ? "2px solid #5ec85e" : i < 10 ? "2px solid #c9272730" : "2px solid transparent"
+                }}>
+                  <span className={i === 0 ? "pos1" : i === 1 ? "pos2" : i === 2 ? "pos3" : ""}>{i + 1}</span>
+                  <span style={{ fontSize: ".68rem", color: i < 2 ? "#e2d9c5" : i < 10 ? "#888" : "#444" }}>{row.pareja}</span>
+                  <span style={{ textAlign: "center", color: "#555" }}>{row.jugados}</span>
+                  <span style={{ textAlign: "center", color: "#5ec85e" }}>{row.ganados}</span>
+                  <span style={{ textAlign: "center", color: "#e05555" }}>{row.perdidos}</span>
+                  <span style={{ textAlign: "center", fontFamily: "'Bebas Neue'", fontSize: "1rem", color: "#c92727" }}>{row.pts}</span>
+                  <span style={{ textAlign: "center", fontSize: ".75rem", color: (row.tantosFavor - row.tantosContra) >= 0 ? "#5ec85e" : "#e05555" }}>
+                    {row.tantosFavor - row.tantosContra > 0 ? "+" : ""}{row.tantosFavor - row.tantosContra}
+                  </span>
+                </div>
+              </div>
+            ))}
+
+            {/* Cruces Play-In automáticos */}
+            {tablaTorneo.filter(r => r.jugados > 0).length >= 3 && (
+              <div style={{ marginTop: "1rem", background: "#080a18", border: "1px solid #223366", borderRadius: "6px", padding: ".8rem" }}>
+                <div style={{ fontFamily: "'Bebas Neue'", color: "#4466aa", fontSize: "1rem", letterSpacing: ".05em", marginBottom: ".6rem" }}>
+                  Cruces Play-In {!ligaCompleta && <span style={{ color: "#555", fontSize: ".75rem" }}>(provisional)</span>}
+                </div>
+                {[
+                  { label: "PIN 1", a: tablaTorneo[2], b: tablaTorneo[9] },
+                  { label: "PIN 2", a: tablaTorneo[3], b: tablaTorneo[8] },
+                  { label: "PIN 3", a: tablaTorneo[4], b: tablaTorneo[7] },
+                  { label: "PIN 4", a: tablaTorneo[5], b: tablaTorneo[6] },
+                ].map(({ label, a, b }) => (
+                  <div key={label} style={{ display: "flex", alignItems: "center", gap: ".5rem", padding: ".3rem 0", borderBottom: "1px solid #0d111c", fontSize: ".75rem" }}>
+                    <span style={{ color: "#4466aa", minWidth: "38px", fontFamily: "'Bebas Neue'" }}>{label}</span>
+                    <span style={{ color: "#e2d9c5" }}>{a?.pareja || "?"}</span>
+                    <span style={{ color: "#333" }}>vs</span>
+                    <span style={{ color: "#888" }}>{b?.pareja || "?"}</span>
+                  </div>
+                ))}
+                <div style={{ fontSize: ".65rem", color: "#333", marginTop: ".5rem" }}>
+                  Semifinales: 1º vs Peor Play-In · 2º vs Mejor Play-In
+                </div>
+              </div>
+            )}
+            <div style={{ fontSize: ".68rem", color: "#333", marginTop: ".7rem" }}>
+              🟢 Top 2 → Semifinales · 🔵 3º–10º → Play-In · ⚫ 11º–18º → Eliminados
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── REGLAMENTO ── */}
+      {view === "reglamento" && (
+        <div className="sec fade">
+          <div className="card">
+            <div className="ct">Normas Generales</div>
+            <div style={{ fontSize: ".82rem", color: "#b0a080", lineHeight: 1.7 }}>
+              <p>• Cada participante abona <strong style={{color:"#e2d9c5"}}>10€</strong> en Recepción del Club para costear las 25 pelotas del Campeonato.</p>
+              <p>• Las parejas se eligieron de forma consensuada para equilibrar el torneo.</p>
+              <p>• Cada pareja debe asistir con su <strong style={{color:"#e2d9c5"}}>paleta de cuero</strong>. Es obligatorio el uso de <strong style={{color:"#e2d9c5"}}>casco, gafas y pantalón blanco</strong>.</p>
+              <p>• Se recomienda que la pareja local vista de <strong style={{color:"#c92727"}}>rojo</strong> y la visitante de <strong style={{color:"#4466aa"}}>azul</strong>.</p>
+              <p>• La pareja <strong style={{color:"#e2d9c5"}}>ganadora</strong> notifica el resultado en el chat de WhatsApp y devuelve las pelotas a Recepción.</p>
+              <p>• Los partidos son arbitrados por los propios participantes salvo que ambas parejas o la Organización decidan lo contrario.</p>
+            </div>
           </div>
 
-          {/* Ranking Porra */}
-          {tablaTab === "porra" && (
-            <div className="card">
-              <div className="ct">Ranking Porra</div>
-              {leaderboard.length === 0 ? (
-                <div style={{ color: "#444", fontSize: ".85rem" }}>Sin participantes aprobados aún.</div>
-              ) : leaderboard.map((p, i) => (
-                <div key={p.id}>
-                  <div className="lb-row" style={{
-                    background: i < 3 ? medalBg(i) : "#06080e",
-                    borderColor: i < 3 ? medalBorder(i) : "#12172a",
-                  }} onClick={() => setExpandedLb(expandedLb === p.id ? null : p.id)}>
-                    <div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.3rem", color: i < 3 ? medalBorder(i) : "#444", minWidth: "1.8rem" }}>
-                      {i + 1}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div className="lb-name">{p.name}</div>
-                      <div style={{ marginTop: ".25rem" }}>
-                        {p.misParejas?.map(x => {
-                          const b = BOMBOS.find(b => b.parejas.includes(x));
-                          return (
-                            <span key={x} className={`tag tag-b${b?.id || 1}`} style={{ marginRight: ".18rem" }}>
-                              {x}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </div>
-                    <div className="lb-pts">{p.pts}</div>
+          <div className="card">
+            <div className="ct">Fases del Torneo</div>
+            <div style={{ fontSize: ".82rem", color: "#b0a080", lineHeight: 1.7 }}>
+              <p>• La <strong style={{color:"#e2d9c5"}}>Fase Liga</strong> dura 5 semanas (11 jornadas). Sistema Champions:</p>
+              <div style={{ background: "#06080e", border: "1px solid #1c2135", borderRadius: "6px", padding: ".6rem .9rem", margin: ".5rem 0", display: "flex", gap: "1.5rem" }}>
+                <div style={{ textAlign: "center" }}><div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.5rem", color: "#c92727" }}>4</div><div style={{ fontSize: ".65rem", color: "#555" }}>Victoria 2-0</div></div>
+                <div style={{ textAlign: "center" }}><div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.5rem", color: "#c9a227" }}>3</div><div style={{ fontSize: ".65rem", color: "#555" }}>Ganador 2-1</div></div>
+                <div style={{ textAlign: "center" }}><div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.5rem", color: "#5ec85e" }}>1</div><div style={{ fontSize: ".65rem", color: "#555" }}>Perdedor 2-1</div></div>
+              </div>
+              <p>• Desempate: enfrentamiento directo → partidos ganados → diferencia de tantos → sorteo.</p>
+              <p>• <strong style={{color:"#5ec85e"}}>1º y 2º</strong> → Semifinales directas.</p>
+              <p>• <strong style={{color:"#4466aa"}}>3º al 10º</strong> → Play-In. Los 2 ganadores van a Semifinales.</p>
+              <p>• <strong style={{color:"#e2d9c5"}}>Semifinal S1:</strong> 1º vs Peor clasificado Play-In.</p>
+              <p>• <strong style={{color:"#e2d9c5"}}>Semifinal S2:</strong> 2º vs Mejor clasificado Play-In.</p>
+              <p>• Si un partido no se disputa antes de la fecha límite, gana la pareja que no impide el juego (2-0). Si ambas no pueden, sorteo.</p>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="ct">Reglamento de Juego</div>
+            <div style={{ fontSize: ".82rem", color: "#b0a080", lineHeight: 1.7 }}>
+              <p>• <strong style={{color:"#e2d9c5"}}>Pelotas:</strong> Zulaika n2. Cada bolsa tiene 3 pelotas. La pareja que saca en el primer set elige pelota; se juega todo el set con ella. Solo se cambia si ambas parejas acuerdan que está rota.</p>
+              <p>• <strong style={{color:"#e2d9c5"}}>Saque:</strong> Por detrás de la raya del 8½. La pelota debe botar superando el 4 sin pasar del 7. Se permite repetir una vez si pasa del 7. Si se falla, se pierde el tanto.</p>
+              <p>• <strong style={{color:"#e2d9c5"}}>Rayas:</strong> Si la pelota toca las rayas delimitadoras del frontón, es mala y se pierde el tanto.</p>
+              <p>• <strong style={{color:"#e2d9c5"}}>Sets:</strong> A <strong>15 tantos</strong> (sets 1 y 2). Si hay tercer set, a <strong>10 tantos</strong>. Gana la pareja que gane 2 sets.</p>
+              <p>• <strong style={{color:"#e2d9c5"}}>Descanso:</strong> 1 minuto por set, solo cuando la pareja solicitante tiene el saque.</p>
+              <p>• El calentamiento empieza a la hora en punto. Se dan 5 minutos para el primer saque.</p>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="ct">Fechas Clave</div>
+            <div style={{ fontSize: ".82rem", color: "#b0a080", lineHeight: 1.7 }}>
+              <p>• <strong style={{color:"#e2d9c5"}}>Inicio Liga:</strong> Lunes 13 de abril de 2026</p>
+              <p>• <strong style={{color:"#e2d9c5"}}>Fin Liga:</strong> 14 de mayo de 2026</p>
+              <p>• <strong style={{color:"#e2d9c5"}}>Play-In:</strong> 18–21 de mayo de 2026</p>
+              <p>• <strong style={{color:"#e2d9c5"}}>Semifinales:</strong> Martes 26 de mayo de 2026</p>
+              <p>• <strong style={{color:"#e2d9c5"}}>3º y 4º puesto:</strong> Jueves 28 de mayo · 19:30</p>
+              <p>• <strong style={{color:"#c92727"}}>Final:</strong> Jueves 28 de mayo · 20:15</p>
+              <p>• <strong style={{color:"#c9a227"}}>Entrega de Premios + Lunch:</strong> Tras la Final en el Salón Social</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── RANKING PORRA ── */}
+      {view === "ranking" && (
+        <div className="sec fade">
+          <div className="card">
+            <div className="ct">Ranking Porra Solidaria</div>
+            {leaderboard.length === 0 ? (
+              <div style={{ color: "#444", fontSize: ".85rem" }}>Sin participantes aprobados aún.</div>
+            ) : leaderboard.map((p, i) => (
+              <div key={p.id}>
+                <div className="lb-row" style={{
+                  background: i < 3 ? medalBg(i) : "#06080e",
+                  borderColor: i < 3 ? medalBorder(i) : "#12172a",
+                }} onClick={() => setExpandedLb(expandedLb === p.id ? null : p.id)}>
+                  <div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.3rem", color: i < 3 ? medalBorder(i) : "#444", minWidth: "1.8rem" }}>
+                    {i + 1}
                   </div>
-                  {expandedLb === p.id && (
-                    <div style={{ background: "#06080e", border: "1px solid #1c2135", borderTop: "none", borderRadius: "0 0 6px 6px", padding: ".7rem .9rem", marginTop: "-.4rem", marginBottom: ".4rem", fontSize: ".78rem" }}>
+                  <div style={{ flex: 1 }}>
+                    <div className="lb-name">{p.name}</div>
+                    <div style={{ marginTop: ".25rem" }}>
                       {p.misParejas?.map(x => {
-                        const d = p.detalle?.[x];
+                        const b = BOMBOS.find(b => b.parejas.includes(x));
                         return (
-                          <div key={x} style={{ display: "flex", justifyContent: "space-between", padding: ".2rem 0", borderBottom: "1px solid #0b0e18" }}>
-                            <span style={{ color: "#888" }}>{x}</span>
-                            <span style={{ color: "#c92727", fontFamily: "'Bebas Neue'", fontSize: ".95rem" }}>
-                              {d?.pts || 0} pts ({d?.jugados || 0}J {d?.ganados || 0}G)
-                            </span>
-                          </div>
+                          <span key={x} className={`tag tag-b${b?.id || 1}`} style={{ marginRight: ".18rem" }}>
+                            {x}
+                          </span>
                         );
                       })}
                     </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Tabla Liga Torneo */}
-          {tablaTab === "torneo" && (
-            <div className="card">
-              <div className="ct">Clasificación Liga</div>
-              <div style={{ fontSize: ".7rem", color: "#444", marginBottom: ".5rem" }}>
-                Desempate: 1º enfrentamiento directo · 2º partidos ganados · 3º diferencia de tantos
-              </div>
-              <div className="tabla-row tabla-hdr" style={{ gridTemplateColumns: "1.2rem 1fr 2rem 2rem 2rem 2.5rem 3rem" }}>
-                <span>#</span><span>Pareja</span><span style={{ textAlign: "center" }}>J</span>
-                <span style={{ textAlign: "center" }}>G</span><span style={{ textAlign: "center" }}>P</span>
-                <span style={{ textAlign: "center" }}>Pts</span>
-                <span style={{ textAlign: "center" }}>Dif</span>
-              </div>
-              {tablaTorneo.map((row, i) => (
-                <div key={row.pareja}>
-                  {/* Separadores de zona */}
-                  {i === 2 && <div style={{ borderTop: "1px dashed #c9272730", margin: ".3rem 0", fontSize: ".65rem", color: "#c92727", paddingLeft: ".3rem" }}>▼ Play-In</div>}
-                  {i === 10 && <div style={{ borderTop: "1px dashed #33333380", margin: ".3rem 0", fontSize: ".65rem", color: "#333", paddingLeft: ".3rem" }}>▼ Eliminados</div>}
-                  <div className="tabla-row" style={{
-                    gridTemplateColumns: "1.2rem 1fr 2rem 2rem 2rem 2.5rem 3rem",
-                    background: i < 2 ? "#0a1a08" : i < 10 ? "#06080e" : "#060606",
-                    borderLeft: i < 2 ? "2px solid #5ec85e" : i < 10 ? "2px solid #c9272730" : "2px solid transparent"
-                  }}>
-                    <span className={i === 0 ? "pos1" : i === 1 ? "pos2" : i === 2 ? "pos3" : ""}>{i + 1}</span>
-                    <span style={{ fontSize: ".68rem", color: i < 2 ? "#e2d9c5" : i < 10 ? "#888" : "#444" }}>{row.pareja}</span>
-                    <span style={{ textAlign: "center", color: "#555" }}>{row.jugados}</span>
-                    <span style={{ textAlign: "center", color: "#5ec85e" }}>{row.ganados}</span>
-                    <span style={{ textAlign: "center", color: "#e05555" }}>{row.perdidos}</span>
-                    <span style={{ textAlign: "center", fontFamily: "'Bebas Neue'", fontSize: "1rem", color: "#c92727" }}>{row.pts}</span>
-                    <span style={{ textAlign: "center", fontSize: ".75rem", color: (row.tantosFavor - row.tantosContra) >= 0 ? "#5ec85e" : "#e05555" }}>
-                      {row.tantosFavor - row.tantosContra > 0 ? "+" : ""}{row.tantosFavor - row.tantosContra}
-                    </span>
                   </div>
+                  <div className="lb-pts">{p.pts}</div>
                 </div>
-              ))}
-
-              {/* Cruces Play-In automáticos */}
-              {tablaTorneo.filter(r => r.jugados > 0).length >= 3 && (
-                <div style={{ marginTop: "1rem", background: "#080a18", border: "1px solid #223366", borderRadius: "6px", padding: ".8rem" }}>
-                  <div style={{ fontFamily: "'Bebas Neue'", color: "#4466aa", fontSize: "1rem", letterSpacing: ".05em", marginBottom: ".6rem" }}>
-                    Cruces Play-In (provisional)
+                {expandedLb === p.id && (
+                  <div style={{ background: "#06080e", border: "1px solid #1c2135", borderTop: "none", borderRadius: "0 0 6px 6px", padding: ".7rem .9rem", marginTop: "-.4rem", marginBottom: ".4rem", fontSize: ".78rem" }}>
+                    {p.misParejas?.map(x => {
+                      const d = p.detalle?.[x];
+                      return (
+                        <div key={x} style={{ display: "flex", justifyContent: "space-between", padding: ".2rem 0", borderBottom: "1px solid #0b0e18" }}>
+                          <span style={{ color: "#888" }}>{x}</span>
+                          <span style={{ color: "#c92727", fontFamily: "'Bebas Neue'", fontSize: ".95rem" }}>
+                            {d?.pts || 0} pts ({d?.jugados || 0}J {d?.ganados || 0}G)
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
-                  {[
-                    { label: "PIN 1", a: tablaTorneo[2], b: tablaTorneo[9] },
-                    { label: "PIN 2", a: tablaTorneo[3], b: tablaTorneo[8] },
-                    { label: "PIN 3", a: tablaTorneo[4], b: tablaTorneo[7] },
-                    { label: "PIN 4", a: tablaTorneo[5], b: tablaTorneo[6] },
-                  ].map(({ label, a, b }) => (
-                    <div key={label} style={{ display: "flex", alignItems: "center", gap: ".5rem", padding: ".3rem 0", borderBottom: "1px solid #0d111c", fontSize: ".75rem" }}>
-                      <span style={{ color: "#4466aa", minWidth: "38px", fontFamily: "'Bebas Neue'" }}>{label}</span>
-                      <span style={{ color: "#e2d9c5" }}>{a?.pareja || "?"}</span>
-                      <span style={{ color: "#333" }}>vs</span>
-                      <span style={{ color: "#888" }}>{b?.pareja || "?"}</span>
-                    </div>
-                  ))}
-                  <div style={{ fontSize: ".65rem", color: "#333", marginTop: ".5rem" }}>
-                    Semifinales: 1º vs Peor clasificado Play-In · 2º vs Mejor clasificado Play-In
-                  </div>
-                </div>
-              )}
-
-              <div style={{ fontSize: ".68rem", color: "#333", marginTop: ".7rem" }}>
-                🟢 Top 2 → Semifinales directas · 🔵 3º–10º → Play-In · ⚫ 11º–18º → Eliminados
+                )}
               </div>
-            </div>
-          )}
+            ))}
+          </div>
         </div>
       )}
 
