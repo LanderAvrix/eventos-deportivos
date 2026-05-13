@@ -1264,7 +1264,10 @@ export default function App() {
                 const w3 = setWinner(s3L,s3V);
                 const localSets = [w1,w2,w3].filter(x=>x==="local").length;
                 const visitSets = [w1,w2,w3].filter(x=>x==="visit").length;
-               
+                const needs3 = setOk(s1L,s1V) && setOk(s2L,s2V) && w1 !== null && w2 !== null && w1 !== w2;
+                const autoWinner = localSets >= 2 ? "local" : visitSets >= 2 ? "visitante" : null;
+                const totalSets = [setOk(s1L,s1V), setOk(s2L,s2V), setOk(s3L,s3V)].filter(Boolean).length;
+
                 return (
                   <div className="card">
                     <div className="ct">Introducir Resultado</div>
