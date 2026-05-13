@@ -288,6 +288,16 @@ export default function App() {
   const isAdminUrl = window.location.search.includes("athletic_1898");
   const [adminTaps, setAdminTaps] = useState(0);
   const [adminUnlocked, setAdminUnlocked] = useState(isAdminUrl);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showIOSInstructions, setShowIOSInstructions] = useState(false);
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+  useEffect(() => {
+    const handler = (e) => { e.preventDefault(); setDeferredPrompt(e); };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
 
   // Firestore state
   const [participants, setParticipants] = useState([]);
@@ -557,6 +567,7 @@ export default function App() {
           { id: "porra", label: "🎯 Mi Porra" },
           { id: "calendario", label: "📅 Calendario" },
           { id: "clasificacion", label: "🏆 Clasificación" },
+          { id: "instalar", label: "📲 Instalar" },
           ...(adminUnlocked ? [{ id: "admin", label: "⚙️ Admin" }] : []),
         ].map(t => (
           <button key={t.id} className={`nb${view === t.id ? " on" : ""}`}
@@ -952,6 +963,111 @@ export default function App() {
                 🟢 Top 2 → Semifinales directas · 🔴 3º–10º → Play-In
               </div>
             </div>
+          )}
+        </div>
+      )}
+
+      {/* ── INSTALAR ── */}
+      {view === "instalar" && (
+        <div className="sec fade">
+          {isStandalone ? (
+            <div className="card" style={{ textAlign: "center", padding: "2rem" }}>
+              <div style={{ fontSize: "3rem" }}>✅</div>
+              <div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.5rem", color: "#5ec85e", marginTop: ".5rem" }}>
+                ¡App ya instalada!
+              </div>
+              <div style={{ color: "#555", fontSize: ".85rem", marginTop: ".4rem" }}>
+                Estás usando la app en modo instalado.
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="card card-red" style={{ textAlign: "center", padding: "1.5rem 1.2rem" }}>
+                <div style={{ fontSize: "3rem" }}>📲</div>
+                <div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.6rem", color: "#c92727", marginTop: ".4rem", letterSpacing: ".08em" }}>
+                  Instala la App
+                </div>
+                <div style={{ color: "#666", fontSize: ".82rem", marginTop: ".3rem" }}>
+                  Accede rápido desde tu móvil sin abrir el navegador
+                </div>
+              </div>
+
+              {/* Android / Chrome */}
+              {deferredPrompt && (
+                <div className="card" style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: "1.8rem", marginBottom: ".5rem" }}>🤖</div>
+                  <div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.2rem", color: "#e2d9c5", marginBottom: ".8rem" }}>
+                    Android / Chrome
+                  </div>
+                  <button className="btn" onClick={async () => {
+                    if (!deferredPrompt) return;
+                    deferredPrompt.prompt();
+                    await deferredPrompt.userChoice;
+                    setDeferredPrompt(null);
+                  }}>
+                    📲 Instalar en este dispositivo
+                  </button>
+                </div>
+              )}
+
+              {/* iOS */}
+              <div className="card">
+                <div style={{ display: "flex", alignItems: "center", gap: ".7rem", marginBottom: ".9rem" }}>
+                  <span style={{ fontSize: "1.8rem" }}>🍎</span>
+                  <div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.2rem", color: "#e2d9c5" }}>
+                    iPhone / iPad (Safari)
+                  </div>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: ".7rem" }}>
+                  {[
+                    { icon: "1️⃣", text: "Abre esta página en Safari (no Chrome)" },
+                    { icon: "2️⃣", text: 'Pulsa el botón compartir ⬆ (abajo en iPhone, arriba en iPad)' },
+                    { icon: "3️⃣", text: '"Añadir a pantalla de inicio"' },
+                    { icon: "4️⃣", text: 'Pulsa "Añadir" — ¡listo!' },
+                  ].map((s, i) => (
+                    <div key={i} style={{ display: "flex", gap: ".7rem", alignItems: "flex-start", background: "#06080e", border: "1px solid #1c2135", borderRadius: "6px", padding: ".6rem .8rem" }}>
+                      <span style={{ fontSize: "1.1rem" }}>{s.icon}</span>
+                      <span style={{ fontSize: ".82rem", color: "#b0a080", lineHeight: 1.5 }}>{s.text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Android manual */}
+              {!deferredPrompt && (
+                <div className="card">
+                  <div style={{ display: "flex", alignItems: "center", gap: ".7rem", marginBottom: ".9rem" }}>
+                    <span style={{ fontSize: "1.8rem" }}>🤖</span>
+                    <div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.2rem", color: "#e2d9c5" }}>
+                      Android / Chrome
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: ".7rem" }}>
+                    {[
+                      { icon: "1️⃣", text: "Abre esta página en Chrome" },
+                      { icon: "2️⃣", text: "Pulsa el menú ⋮ (tres puntos, arriba a la derecha)" },
+                      { icon: "3️⃣", text: '"Añadir a pantalla de inicio" o "Instalar app"' },
+                      { icon: "4️⃣", text: 'Confirma — ¡listo!' },
+                    ].map((s, i) => (
+                      <div key={i} style={{ display: "flex", gap: ".7rem", alignItems: "flex-start", background: "#06080e", border: "1px solid #1c2135", borderRadius: "6px", padding: ".6rem .8rem" }}>
+                        <span style={{ fontSize: "1.1rem" }}>{s.icon}</span>
+                        <span style={{ fontSize: ".82rem", color: "#b0a080", lineHeight: 1.5 }}>{s.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="card" style={{ textAlign: "center" }}>
+                <div style={{ color: "#444", fontSize: ".78rem" }}>URL de la app</div>
+                <div style={{ color: "#c92727", fontFamily: "'Bebas Neue'", fontSize: "1.1rem", marginTop: ".3rem", letterSpacing: ".05em" }}>
+                  {window.location.hostname}
+                </div>
+                <div style={{ color: "#333", fontSize: ".72rem", marginTop: ".3rem" }}>
+                  Compártela con los participantes
+                </div>
+              </div>
+            </>
           )}
         </div>
       )}
