@@ -42,8 +42,8 @@ const ALL_PAREJAS = BOMBOS.flatMap(b => b.parejas);
 // puntua: true = cuenta para la porra
 const CALENDAR = [
   {id:"P1",  fecha:"2026-04-13", hora:"19:15", local:"EGURBIDE - SAENZ DE BURUAGA", visitante:"ARRUTIA - PRIETO",       phase:"liga"},
-  {id:"P2",  fecha:"2026-04-13", hora:"20:00", local:"GOMEZ - SAGREDO",              visitante:"GUERRA - ETXEBARRIA",    phase:"liga"},
-  {id:"P10", fecha:"2026-04-13", hora:"21:00", local:"MELERO - ALBERDI",             visitante:"GONDRA - HERNANDEZ",     phase:"liga"},
+  {id:"P2",  fecha:"2026-04-13", hora:"20:00", local:"GOMEZ - SAGREDO",              visitante:"GONDRA - HERNANDEZ",     phase:"liga"},
+  {id:"P10", fecha:"2026-04-13", hora:"21:00", local:"MELERO - ALBERDI",             visitante:"GUERRA - ETXEBARRIA",    phase:"liga"},
   {id:"P6",  fecha:"2026-04-20", hora:"19:00", local:"GUERRA - ETXEBARRIA",          visitante:"GARMENDIA - SALAZAR",    phase:"liga"},
   {id:"P4",  fecha:"2026-04-20", hora:"20:00", local:"TXIKITO - GALLAGA",            visitante:"ALAVA - ARROITA",        phase:"liga"},
   {id:"P5",  fecha:"2026-04-20", hora:"21:00", local:"GOMEZ - SAGREDO",              visitante:"MARIN - ALVAREZ",        phase:"liga"},
