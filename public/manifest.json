@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Paleta 2026",
+  "name": "Paleta Cuero 2026 - Porra Solidaria",
   "icons": [
     {
       "src": "favicon.ico",
@@ -20,6 +20,7 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#06080e",
+  "background_color": "#06080e",
+  "orientation": "portrait"
 }
