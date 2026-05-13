@@ -289,8 +289,8 @@ export default function App() {
   const [adminTaps, setAdminTaps] = useState(0);
   const [adminUnlocked, setAdminUnlocked] = useState(isAdminUrl);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [showIOSInstructions, setShowIOSInstructions] = useState(false);
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  
+ 
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
   useEffect(() => {
