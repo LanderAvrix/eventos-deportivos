@@ -142,7 +142,7 @@ const computeParticipantePuntos = (participante, matches) => {
 const computeTablaTorneo = (matches) => {
   const stats = {};
   for (const p of ALL_PAREJAS) {
-    stats[p] = { jugados: 0, ganados: 0, perdidos: 0, pts: 0, pareja: p };
+    stats[p] = { jugados: 0, ganados: 0, perdidos: 0, pts: 0, tantosFavor: 0, tantosContra: 0, pareja: p };
   }
   for (const m of matches) {
     if (m.phase !== "liga") continue;
@@ -161,10 +161,40 @@ const computeTablaTorneo = (matches) => {
       stats[visitante].ganados++;
       stats[local].perdidos++;
     }
+    // Tantos de cada set
+    for (const set of (m.result.sets || [])) {
+      if (!set || set.length < 2) continue;
+      stats[local].tantosFavor += Number(set[0]);
+      stats[local].tantosContra += Number(set[1]);
+      stats[visitante].tantosFavor += Number(set[1]);
+      stats[visitante].tantosContra += Number(set[0]);
+    }
   }
+
+  // Función para obtener resultado directo entre dos parejas
+  const directResult = (a, b) => {
+    const m = matches.find(m => m.phase === "liga" && m.result?.winner &&
+      ((m.local === a && m.visitante === b) || (m.local === b && m.visitante === a)));
+    if (!m) return null;
+    const aWon = (m.local === a && m.result.winner === "local") ||
+                 (m.visitante === a && m.result.winner === "visitante");
+    return aWon ? 1 : -1;
+  };
+
   return Object.values(stats).sort((a, b) => {
+    // 1. Puntos
     if (b.pts !== a.pts) return b.pts - a.pts;
+    // 2. Enfrentamiento directo
+    const direct = directResult(a.pareja, b.pareja);
+    if (direct !== null) return -direct; // -1 = a ganó = a va antes
+    // 3. Partidos ganados
     if (b.ganados !== a.ganados) return b.ganados - a.ganados;
+    // 4. Diferencia de tantos
+    const diffA = a.tantosFavor - a.tantosContra;
+    const diffB = b.tantosFavor - b.tantosContra;
+    if (diffB !== diffA) return diffB - diffA;
+    // 5. Tantos a favor
+    if (b.tantosFavor !== a.tantosFavor) return b.tantosFavor - a.tantosFavor;
     return a.pareja.localeCompare(b.pareja);
   });
 };
@@ -941,28 +971,64 @@ export default function App() {
             <div className="card">
               <div className="ct">Clasificación Liga</div>
               <div style={{ fontSize: ".7rem", color: "#444", marginBottom: ".5rem" }}>
-                Solo partidos de liga · 4pts victoria 2-0 · 3pts victoria 2-1 · 1pt derrota 2-1
+                Desempate: 1º enfrentamiento directo · 2º partidos ganados · 3º diferencia de tantos
               </div>
-              <div className="tabla-row tabla-hdr">
+              <div className="tabla-row tabla-hdr" style={{ gridTemplateColumns: "1.2rem 1fr 2rem 2rem 2rem 2.5rem 3rem" }}>
                 <span>#</span><span>Pareja</span><span style={{ textAlign: "center" }}>J</span>
                 <span style={{ textAlign: "center" }}>G</span><span style={{ textAlign: "center" }}>P</span>
                 <span style={{ textAlign: "center" }}>Pts</span>
+                <span style={{ textAlign: "center" }}>Dif</span>
               </div>
               {tablaTorneo.map((row, i) => (
-                <div key={row.pareja} className="tabla-row" style={{
-                  background: i < 2 ? "#0a1a08" : i < 10 ? "#06080e" : "#060606",
-                  borderLeft: i < 2 ? "2px solid #5ec85e" : i < 10 ? "2px solid #c9272730" : "2px solid transparent"
-                }}>
-                  <span className={i === 0 ? "pos1" : i === 1 ? "pos2" : i === 2 ? "pos3" : ""}>{i + 1}</span>
-                  <span style={{ fontSize: ".72rem", color: i < 2 ? "#e2d9c5" : "#888" }}>{row.pareja}</span>
-                  <span style={{ textAlign: "center", color: "#555" }}>{row.jugados}</span>
-                  <span style={{ textAlign: "center", color: "#5ec85e" }}>{row.ganados}</span>
-                  <span style={{ textAlign: "center", color: "#e05555" }}>{row.perdidos}</span>
-                  <span style={{ textAlign: "center", fontFamily: "'Bebas Neue'", fontSize: "1rem", color: "#c92727" }}>{row.pts}</span>
+                <div key={row.pareja}>
+                  {/* Separadores de zona */}
+                  {i === 2 && <div style={{ borderTop: "1px dashed #c9272730", margin: ".3rem 0", fontSize: ".65rem", color: "#c92727", paddingLeft: ".3rem" }}>▼ Play-In</div>}
+                  {i === 10 && <div style={{ borderTop: "1px dashed #33333380", margin: ".3rem 0", fontSize: ".65rem", color: "#333", paddingLeft: ".3rem" }}>▼ Eliminados</div>}
+                  <div className="tabla-row" style={{
+                    gridTemplateColumns: "1.2rem 1fr 2rem 2rem 2rem 2.5rem 3rem",
+                    background: i < 2 ? "#0a1a08" : i < 10 ? "#06080e" : "#060606",
+                    borderLeft: i < 2 ? "2px solid #5ec85e" : i < 10 ? "2px solid #c9272730" : "2px solid transparent"
+                  }}>
+                    <span className={i === 0 ? "pos1" : i === 1 ? "pos2" : i === 2 ? "pos3" : ""}>{i + 1}</span>
+                    <span style={{ fontSize: ".68rem", color: i < 2 ? "#e2d9c5" : i < 10 ? "#888" : "#444" }}>{row.pareja}</span>
+                    <span style={{ textAlign: "center", color: "#555" }}>{row.jugados}</span>
+                    <span style={{ textAlign: "center", color: "#5ec85e" }}>{row.ganados}</span>
+                    <span style={{ textAlign: "center", color: "#e05555" }}>{row.perdidos}</span>
+                    <span style={{ textAlign: "center", fontFamily: "'Bebas Neue'", fontSize: "1rem", color: "#c92727" }}>{row.pts}</span>
+                    <span style={{ textAlign: "center", fontSize: ".75rem", color: (row.tantosFavor - row.tantosContra) >= 0 ? "#5ec85e" : "#e05555" }}>
+                      {row.tantosFavor - row.tantosContra > 0 ? "+" : ""}{row.tantosFavor - row.tantosContra}
+                    </span>
+                  </div>
                 </div>
               ))}
+
+              {/* Cruces Play-In automáticos */}
+              {tablaTorneo.filter(r => r.jugados > 0).length >= 3 && (
+                <div style={{ marginTop: "1rem", background: "#080a18", border: "1px solid #223366", borderRadius: "6px", padding: ".8rem" }}>
+                  <div style={{ fontFamily: "'Bebas Neue'", color: "#4466aa", fontSize: "1rem", letterSpacing: ".05em", marginBottom: ".6rem" }}>
+                    Cruces Play-In (provisional)
+                  </div>
+                  {[
+                    { label: "PIN 1", a: tablaTorneo[2], b: tablaTorneo[9] },
+                    { label: "PIN 2", a: tablaTorneo[3], b: tablaTorneo[8] },
+                    { label: "PIN 3", a: tablaTorneo[4], b: tablaTorneo[7] },
+                    { label: "PIN 4", a: tablaTorneo[5], b: tablaTorneo[6] },
+                  ].map(({ label, a, b }) => (
+                    <div key={label} style={{ display: "flex", alignItems: "center", gap: ".5rem", padding: ".3rem 0", borderBottom: "1px solid #0d111c", fontSize: ".75rem" }}>
+                      <span style={{ color: "#4466aa", minWidth: "38px", fontFamily: "'Bebas Neue'" }}>{label}</span>
+                      <span style={{ color: "#e2d9c5" }}>{a?.pareja || "?"}</span>
+                      <span style={{ color: "#333" }}>vs</span>
+                      <span style={{ color: "#888" }}>{b?.pareja || "?"}</span>
+                    </div>
+                  ))}
+                  <div style={{ fontSize: ".65rem", color: "#333", marginTop: ".5rem" }}>
+                    Semifinales: 1º vs Peor clasificado Play-In · 2º vs Mejor clasificado Play-In
+                  </div>
+                </div>
+              )}
+
               <div style={{ fontSize: ".68rem", color: "#333", marginTop: ".7rem" }}>
-                🟢 Top 2 → Semifinales directas · 🔴 3º–10º → Play-In
+                🟢 Top 2 → Semifinales directas · 🔵 3º–10º → Play-In · ⚫ 11º–18º → Eliminados
               </div>
             </div>
           )}
@@ -1146,12 +1212,14 @@ export default function App() {
                 {nm.matchId && (() => {
                   // Auto-calcular ganador desde los sets
                   const localWins = [0,1,2].filter(i => {
-                    const l = Number(sLocal[i]); const v = Number(sVisit[i]);
-                    return sLocal[i] !== "" && sVisit[i] !== "" && l > v;
+                    const l = sLocal[i]; const v = sVisit[i];
+                    if (l === "" || l === undefined || v === "" || v === undefined) return false;
+                    return Number(l) > Number(v);
                   }).length;
                   const visitWins = [0,1,2].filter(i => {
-                    const l = Number(sLocal[i]); const v = Number(sVisit[i]);
-                    return sLocal[i] !== "" && sVisit[i] !== "" && v > l;
+                    const l = sLocal[i]; const v = sVisit[i];
+                    if (l === "" || l === undefined || v === "" || v === undefined) return false;
+                    return Number(v) > Number(l);
                   }).length;
                   const autoWinner = localWins >= 2 ? "local" : visitWins >= 2 ? "visitante" : null;
                   const totalSets = [0,1,2].filter(i => sLocal[i] !== "" && sVisit[i] !== "").length;
