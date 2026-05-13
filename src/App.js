@@ -585,7 +585,7 @@ export default function App() {
 
       {/* HEADER */}
       <div className="hdr">
-        <span className="htrophy" onClick={handleTrophyTap}>🏆</span>
+        <img src="/logo192.png" alt="Logo" onClick={handleTrophyTap} style={{width:"72px",height:"72px",objectFit:"contain",cursor:"pointer",filter:"drop-shadow(0 0 16px #c9272799)"}} />
         <div className="htitle">PALETA CUERO 2026</div>
         <div className="hsub">Txapelketa · Porra Solidaria</div>
         {config.charityName && (
