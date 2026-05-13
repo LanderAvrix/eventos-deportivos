@@ -458,6 +458,10 @@ export default function App() {
   const matchByCalId = {};
   for (const m of matches) { if (m.calId) matchByCalId[m.calId] = m; }
 
+  // Liga completa cuando los 27 partidos tienen resultado
+  const ligaJugados = matches.filter(m => m.phase === "liga" && m.result?.winner).length;
+  const ligaCompleta = ligaJugados >= 27;
+
   // Next upcoming matches
   const today = new Date().toISOString().slice(0, 10);
   const upcoming = CALENDAR.filter(c => c.fecha >= today && !matchByCalId[c.id]).slice(0, 5);
@@ -722,11 +726,18 @@ export default function App() {
               <div className="ct">Próximos Partidos</div>
               {upcoming.map(c => {
                 const resolved = resolveTeams(c, tablaTorneo, matchByCalId);
+                const isProvisional = !ligaCompleta && ["playin","semis","final","tercero"].includes(c.phase);
                 return (
                   <div key={c.id} className="match-row">
                     <div className="match-teams">
-                      <div className="match-local">{resolved.local}</div>
-                      <div className="match-visit">{resolved.visitante}</div>
+                      <div className="match-local">
+                        {resolved.local}
+                        {isProvisional && <span style={{ color:"#555", fontSize:".65rem", marginLeft:".3rem" }}>(prov.)</span>}
+                      </div>
+                      <div className="match-visit">
+                        {resolved.visitante}
+                        {isProvisional && <span style={{ color:"#555", fontSize:".65rem", marginLeft:".3rem" }}>(prov.)</span>}
+                      </div>
                     </div>
                     <div style={{ textAlign: "right" }}>
                       <div style={{ fontSize: ".7rem", color: "#555" }}>{formatFecha(c.fecha)}</div>
@@ -942,15 +953,18 @@ export default function App() {
                     const m = matchByCalId[c.id];
                     const hasResult = m?.result?.winner;
                     const resolved = resolveTeams(c, tablaTorneo, matchByCalId);
+                    const isProvisional = !ligaCompleta && ["playin","semis","final","tercero"].includes(c.phase);
                     return (
                       <div key={c.id} className="match-row">
                         <div style={{ color: "#444", fontSize: ".68rem", minWidth: "28px" }}>{c.id}</div>
                         <div className="match-teams">
                           <div className="match-local" style={{ color: hasResult && m.result.winner === "local" ? "#c92727" : "#e2d9c5" }}>
                             {resolved.local}
+                            {isProvisional && <span style={{ color:"#555", fontSize:".62rem", marginLeft:".3rem" }}>(prov.)</span>}
                           </div>
                           <div className="match-visit" style={{ color: hasResult && m.result.winner === "visitante" ? "#c92727" : "#888" }}>
                             {resolved.visitante}
+                            {isProvisional && <span style={{ color:"#555", fontSize:".62rem", marginLeft:".3rem" }}>(prov.)</span>}
                           </div>
                         </div>
                         {hasResult ? renderMatchResult(c.id) : (
@@ -1250,9 +1264,9 @@ export default function App() {
                 const w3 = setWinner(s3L,s3V);
                 const localSets = [w1,w2,w3].filter(x=>x==="local").length;
                 const visitSets = [w1,w2,w3].filter(x=>x==="visit").length;
-                
-                
-                
+                const needs3 = setOk(s1L,s1V) && setOk(s2L,s2V) && w1 !== null && w2 !== null && w1 !== w2;
+                const autoWinner = localSets >= 2 ? "local" : visitSets >= 2 ? "visitante" : null;
+                const totalSets = [setOk(s1L,s1V), setOk(s2L,s2V), setOk(s3L,s3V)].filter(Boolean).length;
 
                 return (
                   <div className="card">
@@ -1291,7 +1305,8 @@ export default function App() {
                       const setOk = (l,v) => l!=="" && v!=="" && l!==undefined && v!==undefined;
                       const setWin = (l,v) => setOk(l,v) ? (Number(l)>Number(v)?"local":Number(v)>Number(l)?"visit":null) : null;
                       const w1=setWin(s1L,s1V), w2=setWin(s2L,s2V), w3=setWin(s3L,s3V);
-                      
+                      const localSets=[w1,w2,w3].filter(x=>x==="local").length;
+                      const visitSets=[w1,w2,w3].filter(x=>x==="visit").length;
                       const needs3 = setOk(s1L,s1V) && setOk(s2L,s2V) && w1!==null && w2!==null && w1!==w2;
                       const autoWinner = localSets>=2?"local":visitSets>=2?"visitante":null;
                       const totalSets = [setOk(s1L,s1V),setOk(s2L,s2V),setOk(s3L,s3V)].filter(Boolean).length;
