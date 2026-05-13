@@ -1250,7 +1250,7 @@ export default function App() {
                             <input className="num-inp" type="number" min="0" max={maxTantos}
                               value={sVisit[i] ?? ""}
                               onChange={e => { const a = [...sVisit]; a[i] = e.target.value; setSVisit(a); }} />
-                            {sLocal[i] !== "" && sVisit[i] !== "" && (
+                            {sLocal[i] !== "" && sLocal[i] !== undefined && sVisit[i] !== "" && sVisit[i] !== undefined && (Number(sLocal[i]) !== 0 || Number(sVisit[i]) !== 0) && (
                               <span style={{ fontSize: ".72rem", color: Number(sLocal[i]) > Number(sVisit[i]) ? "#c92727" : "#5ec85e" }}>
                                 {Number(sLocal[i]) > Number(sVisit[i]) ? `✓ ${nm.local.split(" - ")[0]}` : `✓ ${nm.visitante.split(" - ")[0]}`}
                               </span>
