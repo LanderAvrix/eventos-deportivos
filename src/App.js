@@ -163,11 +163,13 @@ const computeTablaTorneo = (matches) => {
     }
     // Tantos de cada set
     for (const set of (m.result.sets || [])) {
-      if (!set || set.length < 2) continue;
-      stats[local].tantosFavor += Number(set[0]);
-      stats[local].tantosContra += Number(set[1]);
-      stats[visitante].tantosFavor += Number(set[1]);
-      stats[visitante].tantosContra += Number(set[0]);
+      if (!set) continue;
+      const l = set.l ?? set[0] ?? 0;
+      const v = set.v ?? set[1] ?? 0;
+      stats[local].tantosFavor += Number(l);
+      stats[local].tantosContra += Number(v);
+      stats[visitante].tantosFavor += Number(v);
+      stats[visitante].tantosContra += Number(l);
     }
   }
 
@@ -513,10 +515,10 @@ export default function App() {
   const handleSaveMatch = async (winnerOverride) => {
     const winner = winnerOverride || nm.winner;
     if (!nm.matchId || !winner) return;
-    // Filtrar solo sets con datos reales (ambos campos rellenos)
+    // Filtrar sets con datos reales y guardar como objetos (Firestore no soporta arrays anidados)
     const setsData = [0,1,2]
-      .filter(i => sLocal[i] !== "" && sLocal[i] !== undefined && sVisit[i] !== "" && sVisit[i] !== undefined)
-      .map(i => [Number(sLocal[i]), Number(sVisit[i])]);
+      .filter(i => sLocal[i] !== "" && sLocal[i] !== undefined && sVisit[i] !== "" && sVisit[i] !== undefined && sLocal[i] !== null && sVisit[i] !== null)
+      .map(i => ({ l: Number(sLocal[i]), v: Number(sVisit[i]) }));
     const result = { winner, sets: setsData };
     const cal = CALENDAR.find(c => c.id === nm.matchId);
     const existingMatch = matchByCalId[nm.matchId];
@@ -532,7 +534,6 @@ export default function App() {
     } else {
       await addDoc(collection(db, "matches"), { ...data, createdAt: Date.now() });
     }
-    // Auto-update campeón
     if (cal?.phase === "final") {
       const champ = winner === "local" ? cal.local : cal.visitante;
       const next = { ...config, champion: champ };
@@ -540,7 +541,7 @@ export default function App() {
       setDoc(doc(db, "config", "settings"), next);
     }
     setNm({ matchId: null, local: "", visitante: "", sets: [], winner: "", phase: "liga", fecha: "" });
-    setSLocal(["",""]); setSVisit(["",""]);
+    setSLocal(["","",""]); setSVisit(["","",""]);
   };
 
   const saveConfig = (updates) => {
@@ -563,7 +564,7 @@ export default function App() {
         </div>
         {sets.length > 0 && (
           <div style={{ fontSize: ".62rem", color: "#444" }}>
-            {sets.map((s, i) => `${s[0]}-${s[1]}`).join(" | ")}
+            {sets.map((s, i) => `${s.l ?? s[0]}-${s.v ?? s[1]}`).join(" | ")}
           </div>
         )}
       </div>
