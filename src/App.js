@@ -1254,10 +1254,6 @@ export default function App() {
 
               {/* Introducir resultado */}
               {(() => {
-                const s1L = sLocal[0] ?? ""; const s1V = sVisit[0] ?? "";
-                const s2L = sLocal[1] ?? ""; const s2V = sVisit[1] ?? "";
-                const s3L = sLocal[2] ?? ""; const s3V = sVisit[2] ?? "";
-
                 return (
                   <div className="card">
                     <div className="ct">Introducir Resultado</div>
