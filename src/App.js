@@ -87,6 +87,60 @@ const CALENDAR = [
 // Fases que puntúan para la porra
 const PUNTUA = (phase) => ["liga","semis","final"].includes(phase);
 
+// Resuelve nombres reales de parejas en Play-In y Semis según clasificación
+const resolveTeams = (cal, tablaTorneo, matchByCalId) => {
+  const pos = (n) => tablaTorneo[n-1]?.pareja || `${n}º`;
+  const winnerOf = (id) => {
+    const m = matchByCalId[id];
+    if (!m?.result?.winner) return null;
+    return m.result.winner === "local" ? m.local : m.visitante;
+  };
+  const loserOf = (id) => {
+    const m = matchByCalId[id];
+    if (!m?.result?.winner) return null;
+    return m.result.winner === "local" ? m.visitante : m.local;
+  };
+
+  const map = {
+    "3º": pos(3), "4º": pos(4), "5º": pos(5), "6º": pos(6),
+    "7º": pos(7), "8º": pos(8), "9º": pos(9), "10º": pos(10),
+    "Ganador PIN1": winnerOf("PIN1") || `Gan. ${pos(3)} vs ${pos(10)}`,
+    "Ganador PIN2": winnerOf("PIN2") || `Gan. ${pos(4)} vs ${pos(9)}`,
+    "Ganador PIN3": winnerOf("PIN3") || `Gan. ${pos(5)} vs ${pos(8)}`,
+    "Ganador PIN4": winnerOf("PIN4") || `Gan. ${pos(6)} vs ${pos(7)}`,
+    "Ganador PIN5": winnerOf("PIN5") || "Gan. PIN5",
+    "Ganador PIN6": winnerOf("PIN6") || "Gan. PIN6",
+    "Peor Play-In": (() => {
+      const w5 = winnerOf("PIN5"); const w6 = winnerOf("PIN6");
+      if (w5 && w6) return [w5,w6].sort((a,b) => {
+        const ia = tablaTorneo.findIndex(r=>r.pareja===a);
+        const ib = tablaTorneo.findIndex(r=>r.pareja===b);
+        return ib - ia; // peor = índice mayor
+      })[0];
+      return "Peor Play-In";
+    })(),
+    "Mejor Play-In": (() => {
+      const w5 = winnerOf("PIN5"); const w6 = winnerOf("PIN6");
+      if (w5 && w6) return [w5,w6].sort((a,b) => {
+        const ia = tablaTorneo.findIndex(r=>r.pareja===a);
+        const ib = tablaTorneo.findIndex(r=>r.pareja===b);
+        return ia - ib; // mejor = índice menor
+      })[0];
+      return "Mejor Play-In";
+    })(),
+    "1º": pos(1), "2º": pos(2),
+    "Ganador S1": winnerOf("S1") || `Gan. S1`,
+    "Ganador S2": winnerOf("S2") || `Gan. S2`,
+    "Perdedor S1": loserOf("S1") || `Per. S1`,
+    "Perdedor S2": loserOf("S2") || `Per. S2`,
+  };
+
+  return {
+    local: map[cal.local] || cal.local,
+    visitante: map[cal.visitante] || cal.visitante,
+  };
+};
+
 // ─── PUNTUACIÓN (Champions: 4 pts 2-0, 3+1 pts 2-1) ────────────────────────
 
 const puntosPorPartido = (result) => {
@@ -585,7 +639,7 @@ export default function App() {
 
       {/* HEADER */}
       <div className="hdr">
-        <img src="/logo192.png" alt="Logo" onClick={handleTrophyTap} style={{width:"72px",height:"72px",objectFit:"contain",cursor:"pointer",filter:"drop-shadow(0 0 16px #c9272799)"}} />
+        <span className="htrophy" onClick={handleTrophyTap}>🏆</span>
         <div className="htitle">PALETA CUERO 2026</div>
         <div className="hsub">Txapelketa · Porra Solidaria</div>
         {config.charityName && (
@@ -666,19 +720,22 @@ export default function App() {
           {upcoming.length > 0 && (
             <div className="card">
               <div className="ct">Próximos Partidos</div>
-              {upcoming.map(c => (
-                <div key={c.id} className="match-row">
-                  <div className="match-teams">
-                    <div className="match-local">{c.local}</div>
-                    <div className="match-visit">{c.visitante}</div>
+              {upcoming.map(c => {
+                const resolved = resolveTeams(c, tablaTorneo, matchByCalId);
+                return (
+                  <div key={c.id} className="match-row">
+                    <div className="match-teams">
+                      <div className="match-local">{resolved.local}</div>
+                      <div className="match-visit">{resolved.visitante}</div>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: ".7rem", color: "#555" }}>{formatFecha(c.fecha)}</div>
+                      <div className="match-hora">{c.hora}</div>
+                      <span className={phaseClass(c.phase)}>{phaseName(c.phase)}</span>
+                    </div>
                   </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: ".7rem", color: "#555" }}>{formatFecha(c.fecha)}</div>
-                    <div className="match-hora">{c.hora}</div>
-                    <span className={phaseClass(c.phase)}>{phaseName(c.phase)}</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
@@ -884,15 +941,16 @@ export default function App() {
                   {cals.map(c => {
                     const m = matchByCalId[c.id];
                     const hasResult = m?.result?.winner;
+                    const resolved = resolveTeams(c, tablaTorneo, matchByCalId);
                     return (
                       <div key={c.id} className="match-row">
                         <div style={{ color: "#444", fontSize: ".68rem", minWidth: "28px" }}>{c.id}</div>
                         <div className="match-teams">
                           <div className="match-local" style={{ color: hasResult && m.result.winner === "local" ? "#c92727" : "#e2d9c5" }}>
-                            {c.local}
+                            {resolved.local}
                           </div>
                           <div className="match-visit" style={{ color: hasResult && m.result.winner === "visitante" ? "#c92727" : "#888" }}>
-                            {c.visitante}
+                            {resolved.visitante}
                           </div>
                         </div>
                         {hasResult ? renderMatchResult(c.id) : (
@@ -1211,102 +1269,90 @@ export default function App() {
                         setNm({ matchId: e.target.value, local: cal?.local||"", visitante: cal?.visitante||"", phase: cal?.phase||"liga", fecha: cal?.fecha||"", winner: existing?.result?.winner||"" });
                       }}>
                       <option value="">-- Selecciona partido --</option>
-                      {CALENDAR.map(c => (
-                        <option key={c.id} value={c.id}>
-                          {c.id} · {c.local} vs {c.visitante} ({formatFecha(c.fecha)} {c.hora})
-                          {matchByCalId[c.id]?.result?.winner ? " ✓" : ""}
-                        </option>
-                      ))}
+                      {CALENDAR.map(c => {
+                        const resolved = resolveTeams(c, tablaTorneo, matchByCalId);
+                        return (
+                          <option key={c.id} value={c.id}>
+                            {c.id} · {resolved.local} vs {resolved.visitante} ({formatFecha(c.fecha)} {c.hora})
+                            {matchByCalId[c.id]?.result?.winner ? " ✓" : ""}
+                          </option>
+                        );
+                      })}
                     </select>
 
-                    {nm.matchId && (
-                      <>
-                        <div style={{ margin: ".8rem 0 .4rem", fontSize: ".8rem", color: "#888" }}>
-                          <strong style={{ color: "#e2d9c5" }}>{nm.local}</strong> vs <strong style={{ color: "#e2d9c5" }}>{nm.visitante}</strong>
-                          <span className={phaseClass(nm.phase)} style={{ marginLeft: ".5rem" }}>{phaseName(nm.phase)}</span>
-                        </div>
-
-                        <label className="lbl">Sets · 1 y 2 a 15 tantos · 3 a 10 tantos</label>
-
-                        {/* Set 1 */}
-                        <div className="row" style={{ marginBottom: ".5rem" }}>
-                          <span style={{ color: "#555", fontSize: ".75rem", minWidth: "60px" }}>Set 1 (15):</span>
-                          <input className="num-inp" type="number" min="0" max="15" value={s1L}
-                            onChange={e => setSLocal(a => { const n=[...a]; n[0]=e.target.value; return n; })} />
-                          <span style={{ color: "#444" }}>-</span>
-                          <input className="num-inp" type="number" min="0" max="15" value={s1V}
-                            onChange={e => setSVisit(a => { const n=[...a]; n[0]=e.target.value; return n; })} />
-                          {w1 && <span style={{ fontSize: ".72rem", color: w1==="local" ? "#c92727" : "#5ec85e" }}>
-                            ✓ {w1==="local" ? nm.local.split(" - ")[0] : nm.visitante.split(" - ")[0]}
-                          </span>}
-                        </div>
-
-                        {/* Set 2 */}
-                        <div className="row" style={{ marginBottom: ".5rem" }}>
-                          <span style={{ color: "#555", fontSize: ".75rem", minWidth: "60px" }}>Set 2 (15):</span>
-                          <input className="num-inp" type="number" min="0" max="15" value={s2L}
-                            onChange={e => setSLocal(a => { const n=[...a]; n[1]=e.target.value; return n; })} />
-                          <span style={{ color: "#444" }}>-</span>
-                          <input className="num-inp" type="number" min="0" max="15" value={s2V}
-                            onChange={e => setSVisit(a => { const n=[...a]; n[1]=e.target.value; return n; })} />
-                          {w2 && <span style={{ fontSize: ".72rem", color: w2==="local" ? "#c92727" : "#5ec85e" }}>
-                            ✓ {w2==="local" ? nm.local.split(" - ")[0] : nm.visitante.split(" - ")[0]}
-                          </span>}
-                        </div>
-
-                        {/* Set 3 solo si empate */}
-                        {needs3 && (
-                          <div className="row" style={{ marginBottom: ".5rem" }}>
-                            <span style={{ color: "#c92727", fontSize: ".75rem", minWidth: "60px" }}>Set 3 (10):</span>
-                            <input className="num-inp" type="number" min="0" max="10" value={s3L}
-                              onChange={e => setSLocal(a => { const n=[...a]; n[2]=e.target.value; return n; })} />
-                            <span style={{ color: "#444" }}>-</span>
-                            <input className="num-inp" type="number" min="0" max="10" value={s3V}
-                              onChange={e => setSVisit(a => { const n=[...a]; n[2]=e.target.value; return n; })} />
-                            {w3 && <span style={{ fontSize: ".72rem", color: w3==="local" ? "#c92727" : "#5ec85e" }}>
-                              ✓ {w3==="local" ? nm.local.split(" - ")[0] : nm.visitante.split(" - ")[0]}
-                            </span>}
+                    {nm.matchId && (() => {
+                      const cal = CALENDAR.find(c => c.id === nm.matchId);
+                      const resolved = cal ? resolveTeams(cal, tablaTorneo, matchByCalId) : { local: nm.local, visitante: nm.visitante };
+                      const localName = resolved.local;
+                      const visitName = resolved.visitante;
+                      const s1L = sLocal[0]??""; const s1V = sVisit[0]??"";
+                      const s2L = sLocal[1]??""; const s2V = sVisit[1]??"";
+                      const s3L = sLocal[2]??""; const s3V = sVisit[2]??"";
+                      const setOk = (l,v) => l!=="" && v!=="" && l!==undefined && v!==undefined;
+                      const setWin = (l,v) => setOk(l,v) ? (Number(l)>Number(v)?"local":Number(v)>Number(l)?"visit":null) : null;
+                      const w1=setWin(s1L,s1V), w2=setWin(s2L,s2V), w3=setWin(s3L,s3V);
+                      const localSets=[w1,w2,w3].filter(x=>x==="local").length;
+                      const visitSets=[w1,w2,w3].filter(x=>x==="visit").length;
+                      const needs3 = setOk(s1L,s1V) && setOk(s2L,s2V) && w1!==null && w2!==null && w1!==w2;
+                      const autoWinner = localSets>=2?"local":visitSets>=2?"visitante":null;
+                      const totalSets = [setOk(s1L,s1V),setOk(s2L,s2V),setOk(s3L,s3V)].filter(Boolean).length;
+                      return (
+                        <>
+                          <div style={{ margin:".8rem 0 .4rem", fontSize:".8rem", color:"#888" }}>
+                            <strong style={{ color:"#e2d9c5" }}>{localName}</strong> vs <strong style={{ color:"#e2d9c5" }}>{visitName}</strong>
+                            <span className={phaseClass(nm.phase)} style={{ marginLeft:".5rem" }}>{phaseName(nm.phase)}</span>
                           </div>
-                        )}
-
-                        {needs3 && !setOk(s3L,s3V) && (
-                          <div style={{ color: "#c9a227", fontSize: ".78rem", marginTop: ".2rem" }}>
-                            ⚠️ Empate 1-1 — introduce el Set 3 (a 10 tantos)
+                          <label className="lbl">Sets · 1 y 2 a 15 tantos · 3 a 10 tantos</label>
+                          <div className="row" style={{ marginBottom:".5rem" }}>
+                            <span style={{ color:"#555", fontSize:".75rem", minWidth:"60px" }}>Set 1 (15):</span>
+                            <input className="num-inp" type="number" min="0" max="15" value={s1L} onChange={e => setSLocal(a=>{const n=[...a];n[0]=e.target.value;return n;})} />
+                            <span style={{ color:"#444" }}>-</span>
+                            <input className="num-inp" type="number" min="0" max="15" value={s1V} onChange={e => setSVisit(a=>{const n=[...a];n[0]=e.target.value;return n;})} />
+                            {w1 && <span style={{ fontSize:".72rem", color:w1==="local"?"#c92727":"#5ec85e" }}>✓ {w1==="local"?localName.split(" - ")[0]:visitName.split(" - ")[0]}</span>}
                           </div>
-                        )}
-
-                        {/* Ganador */}
-                        {autoWinner && (
-                          <div style={{ background: "#0a1a08", border: "1px solid #286a28", borderRadius: "6px", padding: ".6rem .9rem", marginTop: ".6rem", display: "flex", alignItems: "center", gap: ".6rem" }}>
-                            <span style={{ fontSize: "1.1rem" }}>✅</span>
-                            <div>
-                              <div style={{ color: "#5ec85e", fontSize: ".75rem", fontFamily: "'Bebas Neue'", letterSpacing: ".05em" }}>Ganador detectado</div>
-                              <div style={{ color: "#e2d9c5", fontSize: ".85rem", fontWeight: 600 }}>
-                                {autoWinner === "local" ? nm.local : nm.visitante}
-                                <span style={{ color: "#555", fontWeight: 400, marginLeft: ".4rem" }}>
-                                  ({totalSets === 2 ? "2-0" : "2-1"})
-                                </span>
+                          <div className="row" style={{ marginBottom:".5rem" }}>
+                            <span style={{ color:"#555", fontSize:".75rem", minWidth:"60px" }}>Set 2 (15):</span>
+                            <input className="num-inp" type="number" min="0" max="15" value={s2L} onChange={e => setSLocal(a=>{const n=[...a];n[1]=e.target.value;return n;})} />
+                            <span style={{ color:"#444" }}>-</span>
+                            <input className="num-inp" type="number" min="0" max="15" value={s2V} onChange={e => setSVisit(a=>{const n=[...a];n[1]=e.target.value;return n;})} />
+                            {w2 && <span style={{ fontSize:".72rem", color:w2==="local"?"#c92727":"#5ec85e" }}>✓ {w2==="local"?localName.split(" - ")[0]:visitName.split(" - ")[0]}</span>}
+                          </div>
+                          {needs3 && (
+                            <div className="row" style={{ marginBottom:".5rem" }}>
+                              <span style={{ color:"#c92727", fontSize:".75rem", minWidth:"60px" }}>Set 3 (10):</span>
+                              <input className="num-inp" type="number" min="0" max="10" value={s3L} onChange={e => setSLocal(a=>{const n=[...a];n[2]=e.target.value;return n;})} />
+                              <span style={{ color:"#444" }}>-</span>
+                              <input className="num-inp" type="number" min="0" max="10" value={s3V} onChange={e => setSVisit(a=>{const n=[...a];n[2]=e.target.value;return n;})} />
+                              {w3 && <span style={{ fontSize:".72rem", color:w3==="local"?"#c92727":"#5ec85e" }}>✓ {w3==="local"?localName.split(" - ")[0]:visitName.split(" - ")[0]}</span>}
+                            </div>
+                          )}
+                          {needs3 && !setOk(s3L,s3V) && <div style={{ color:"#c9a227", fontSize:".78rem", marginTop:".2rem" }}>⚠️ Empate 1-1 — introduce el Set 3 (a 10 tantos)</div>}
+                          {autoWinner && (
+                            <div style={{ background:"#0a1a08", border:"1px solid #286a28", borderRadius:"6px", padding:".6rem .9rem", marginTop:".6rem", display:"flex", alignItems:"center", gap:".6rem" }}>
+                              <span style={{ fontSize:"1.1rem" }}>✅</span>
+                              <div>
+                                <div style={{ color:"#5ec85e", fontSize:".75rem", fontFamily:"'Bebas Neue'", letterSpacing:".05em" }}>Ganador detectado</div>
+                                <div style={{ color:"#e2d9c5", fontSize:".85rem", fontWeight:600 }}>
+                                  {autoWinner==="local"?localName:visitName}
+                                  <span style={{ color:"#555", fontWeight:400, marginLeft:".4rem" }}>({totalSets===2?"2-0":"2-1"})</span>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        )}
-
-                        <div className="row" style={{ marginTop: ".9rem" }}>
-                          <button className="btn" onClick={() => handleSaveMatch(autoWinner)} disabled={!autoWinner}>
-                            Guardar resultado
-                          </button>
-                          {matchByCalId[nm.matchId]?.result?.winner && (
-                            <button className="btn-del" onClick={async () => {
-                              const m = matchByCalId[nm.matchId];
-                              if (m && window.confirm("¿Borrar este resultado?"))
-                                await deleteDoc(doc(db, "matches", m.id));
-                              setNm({ matchId: null, local: "", visitante: "", sets: [], winner: "", phase: "liga", fecha: "" });
-                              setSLocal(["","",""]); setSVisit(["","",""]);
-                            }}>🗑 Borrar resultado</button>
                           )}
-                        </div>
-                      </>
-                    )}
+                          <div className="row" style={{ marginTop:".9rem" }}>
+                            <button className="btn" onClick={() => handleSaveMatch(autoWinner)} disabled={!autoWinner}>Guardar resultado</button>
+                            {matchByCalId[nm.matchId]?.result?.winner && (
+                              <button className="btn-del" onClick={async () => {
+                                const m = matchByCalId[nm.matchId];
+                                if (m && window.confirm("¿Borrar este resultado?")) await deleteDoc(doc(db,"matches",m.id));
+                                setNm({ matchId:null, local:"", visitante:"", sets:[], winner:"", phase:"liga", fecha:"" });
+                                setSLocal(["","",""]); setSVisit(["","",""]);
+                              }}>🗑 Borrar resultado</button>
+                            )}
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                 );
               })()}
