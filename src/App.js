@@ -690,30 +690,17 @@ export default function App() {
       {/* ── HOME ── */}
       {view === "home" && (
         <div className="sec fade">
-          {/* Solidaridad */}
-          <div className="solidarity-bar">
-            ❤️ Porra solidaria — Premio: {config.prizeDesc || "2 entradas para un partido de pelota"}
-            {config.charityName && ` · Recaudación para ${config.charityName}`}
-          </div>
-
           {/* Stats */}
           <div className="card">
             <div className="ct">Resumen</div>
             <div className="stat-g">
-              <div className="stat"><div className="stn">{approved.length}</div><div className="stl">Participantes</div></div>
               <div className="stat"><div className="stn">{matches.filter(m => m.result?.winner).length}</div><div className="stl">Partidos jugados</div></div>
               <div className="stat"><div className="stn">{matches.filter(m => m.result?.winner && m.phase === "liga").length}/27</div><div className="stl">Liga</div></div>
-              <div className="stat">
-                <div className="stn" style={{ color: config.registrationOpen ? "#5ec85e" : "#e05555" }}>
-                  {config.registrationOpen ? "ABIERTA" : "CERRADA"}
-                </div>
-                <div className="stl">Inscripción</div>
-              </div>
             </div>
           </div>
 
           {/* Top 3 porra */}
-          {leaderboard.length > 0 && (
+          {config.porraVisible !== false && leaderboard.length > 0 && (
             <div className="card">
               <div className="ct">Top Porra</div>
               {leaderboard.slice(0, 3).map((p, i) => (
