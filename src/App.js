@@ -707,6 +707,9 @@ export default function App() {
               )}
               <div className="stat"><div className="stn">{matches.filter(m => m.result?.winner).length}</div><div className="stl">Partidos jugados</div></div>
               <div className="stat"><div className="stn">{matches.filter(m => m.result?.winner && m.phase === "liga").length}/27</div><div className="stl">Liga</div></div>
+              <div className="stat"><div className="stn">{matches.filter(m => m.result?.winner && m.phase === "playin").length}/6</div><div className="stl">Play-In</div></div>
+              <div className="stat"><div className="stn">{matches.filter(m => m.result?.winner && m.phase === "semis").length}/2</div><div className="stl">Semis</div></div>
+              <div className="stat"><div className="stn">{matches.filter(m => m.result?.winner && m.phase === "final").length}/1</div><div className="stl">Final</div></div>
               {config.porraVisible !== false && (
                 <div className="stat">
                   <div className="stn" style={{ color: config.registrationOpen ? "#5ec85e" : "#e05555" }}>
