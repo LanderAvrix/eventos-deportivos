@@ -388,7 +388,7 @@ export default function App() {
   const [matches, setMatches] = useState([]);
   const [config, setConfig] = useState({
     registrationOpen: true, charityName: "", prizeDesc: "",
-    champion: null, finalist: null, third: null, porraVisible: true
+    champion: null, finalist: null, third: null
   });
   const [adminUser, setAdminUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -420,18 +420,6 @@ export default function App() {
   const [sLocal, setSLocal] = useState(["","",""]);
   const [sVisit, setSVisit] = useState(["","",""]);
 
-  // Admin schedule edit
-  const [schedEdit, setSchedEdit] = useState({ matchId: null, fecha: "", hora: "" });
-  const [schedOverrides, setSchedOverrides] = useState({});
-
-  const handleSaveSchedule = async () => {
-    if (!schedEdit.matchId || !schedEdit.fecha || !schedEdit.hora) return;
-    const next = { ...schedOverrides, [schedEdit.matchId]: { fecha: schedEdit.fecha, hora: schedEdit.hora } };
-    setSchedOverrides(next);
-    await setDoc(doc(db, "config", "scheduleOverrides"), next);
-    setSchedEdit({ matchId: null, fecha: "", hora: "" });
-  };
-
   // UI
   const [expandedLb, setExpandedLb] = useState(null);
   const [calFilter, setCalFilter] = useState("todas");
@@ -445,9 +433,6 @@ export default function App() {
       setMatches(s.docs.map(d => ({ id: d.id, ...d.data() })))));
     u.push(onSnapshot(doc(db, "config", "settings"), s => {
       if (s.exists()) setConfig(s.data());
-    }));
-    u.push(onSnapshot(doc(db, "config", "scheduleOverrides"), s => {
-      if (s.exists()) setSchedOverrides(s.data());
     }));
     u.push(onAuthStateChanged(auth, user => setAdminUser(user)));
     const splash = setTimeout(() => setLoading(false), 800);
@@ -471,12 +456,6 @@ export default function App() {
   // Match results lookup by id
   const matchByCalId = {};
   for (const m of matches) { if (m.calId) matchByCalId[m.calId] = m; }
-
-  // Obtener fecha/hora real (con posible override del admin)
-  const getSchedule = (calId, defaultFecha, defaultHora) => ({
-    fecha: schedOverrides[calId]?.fecha || defaultFecha,
-    hora: schedOverrides[calId]?.hora || defaultHora,
-  });
 
   // Liga completa cuando los 27 partidos tienen resultado
   const ligaJugados = matches.filter(m => m.phase === "liga" && m.result?.winner).length;
@@ -653,7 +632,7 @@ export default function App() {
 
   if (loading) return (
     <div className="app"><style>{CSS}</style>
-      <div className="loading" style={{ paddingTop: "5rem" }}>Â· Cargando...</div>
+      <div className="loading" style={{ paddingTop: "5rem" }}>â³ Cargando...</div>
     </div>
   );
 
@@ -663,24 +642,25 @@ export default function App() {
 
       {/* HEADER */}
       <div className="hdr">
-        <img src="/logo192.png" alt="Logo" onClick={handleTrophyTap} style={{width:"72px",height:"72px",objectFit:"contain",cursor:"pointer",filter:"drop-shadow(0 0 16px #c9272799)"}} />
+        <span className="htrophy" onClick={handleTrophyTap}>ðŸ†</span>
         <div className="htitle">PALETA CUERO 2026</div>
-        <div className="hsub">Txapelketa</div>
+        <div className="hsub">Txapelketa Â· Porra Solidaria</div>
+        {config.charityName && (
+          <div className="hbadge">â¤ï¸ RecaudaciÃ³n para: {config.charityName}</div>
+        )}
       </div>
 
       {/* NAV */}
       <nav className="nav">
         {[
-          { id: "home",       label: "Inicio" },
-          { id: "calendario", label: "Calendario" },
-          { id: "liga",       label: "Liga" },
-          { id: "reglamento", label: "Reglamento" },
-          ...(config.porraVisible !== false ? [
-            { id: "porra",   label: "Porra Solidaria" },
-            { id: "ranking", label: "Ranking Porra" },
-          ] : []),
-          { id: "instalar",   label: "Instalar App" },
-          ...(adminUnlocked ? [{ id: "admin", label: "Admin" }] : []),
+          { id: "home",       label: "ðŸ  Inicio" },
+          { id: "calendario", label: "ðŸ“… Calendario" },
+          { id: "liga",       label: "ðŸ† Liga" },
+          { id: "reglamento", label: "ðŸ“‹ Reglamento" },
+          { id: "porra",      label: "ðŸŽ¯ Porra Solidaria" },
+          { id: "ranking",    label: "ðŸ¥‡ Ranking Porra" },
+          { id: "instalar",   label: "ðŸ“² Instalar" },
+          ...(adminUnlocked ? [{ id: "admin", label: "âš™ï¸ Admin" }] : []),
         ].map(t => (
           <button key={t.id} className={`nb${view === t.id ? " on" : ""}`}
             onClick={() => setView(t.id)}>{t.label}</button>
@@ -691,35 +671,29 @@ export default function App() {
       {view === "home" && (
         <div className="sec fade">
           {/* Solidaridad */}
-          {config.porraVisible !== false && (
-            <div className="solidarity-bar">
-              â™¥ Porra solidaria â€” Premio: {config.prizeDesc || "2 entradas para un partido de pelota"}
-              {config.charityName && ` Â· RecaudaciÃ³n para ${config.charityName}`}
-            </div>
-          )}
+          <div className="solidarity-bar">
+            â¤ï¸ Porra solidaria â€” Premio: {config.prizeDesc || "2 entradas para un partido de pelota"}
+            {config.charityName && ` Â· RecaudaciÃ³n para ${config.charityName}`}
+          </div>
 
           {/* Stats */}
           <div className="card">
             <div className="ct">Resumen</div>
             <div className="stat-g">
-              {config.porraVisible !== false && (
-                <div className="stat"><div className="stn">{approved.length}</div><div className="stl">Participantes</div></div>
-              )}
+              <div className="stat"><div className="stn">{approved.length}</div><div className="stl">Participantes</div></div>
               <div className="stat"><div className="stn">{matches.filter(m => m.result?.winner).length}</div><div className="stl">Partidos jugados</div></div>
               <div className="stat"><div className="stn">{matches.filter(m => m.result?.winner && m.phase === "liga").length}/27</div><div className="stl">Liga</div></div>
-              {config.porraVisible !== false && (
-                <div className="stat">
-                  <div className="stn" style={{ color: config.registrationOpen ? "#5ec85e" : "#e05555" }}>
-                    {config.registrationOpen ? "ABIERTA" : "CERRADA"}
-                  </div>
-                  <div className="stl">InscripciÃ³n</div>
+              <div className="stat">
+                <div className="stn" style={{ color: config.registrationOpen ? "#5ec85e" : "#e05555" }}>
+                  {config.registrationOpen ? "ABIERTA" : "CERRADA"}
                 </div>
-              )}
+                <div className="stl">InscripciÃ³n</div>
+              </div>
             </div>
           </div>
 
           {/* Top 3 porra */}
-          {config.porraVisible !== false && leaderboard.length > 0 && (
+          {leaderboard.length > 0 && (
             <div className="card">
               <div className="ct">Top Porra</div>
               {leaderboard.slice(0, 3).map((p, i) => (
@@ -813,8 +787,8 @@ export default function App() {
                   <p style={{ marginTop: ".4rem" }}>2. Cada punto que saquen tus parejas en la <strong>liga, semifinales y final</strong> suma para ti.</p>
                   <p style={{ marginTop: ".4rem" }}>3. El Play-In no puntÃºa para la porra.</p>
                   <p style={{ marginTop: ".4rem" }}>4. Sistema <strong>Champions</strong>: victoria 2-0 = 4pts, victoria 2-1 = 3pts ganador / 1pt perdedor.</p>
-                  <p style={{ marginTop: ".4rem" }}>Â· Premio: {config.prizeDesc || "2 entradas para un partido de pelota"}</p>
-                  {config.charityName && <p style={{ marginTop: ".4rem" }}>â™¥ RecaudaciÃ³n para: <strong>{config.charityName}</strong></p>}
+                  <p style={{ marginTop: ".4rem" }}>ðŸ† Premio: {config.prizeDesc || "2 entradas para un partido de pelota"}</p>
+                  {config.charityName && <p style={{ marginTop: ".4rem" }}>â¤ï¸ RecaudaciÃ³n para: <strong>{config.charityName}</strong></p>}
                 </div>
               </div>
 
@@ -824,7 +798,7 @@ export default function App() {
                   <div className="ct">Apuntar mi Porra</div>
                   {!config.registrationOpen && (
                     <div style={{ background: "#280a0a", border: "1px solid #c9272740", borderRadius: "6px", padding: ".7rem", marginBottom: ".9rem", color: "#c92727", fontSize: ".82rem" }}>
-                      ! Las inscripciones estÃ¡n cerradas. Contacta con la organizaciÃ³n.
+                      âš ï¸ Las inscripciones estÃ¡n cerradas. Contacta con la organizaciÃ³n.
                     </div>
                   )}
                   <label className="lbl">Nombre</label>
@@ -872,7 +846,7 @@ export default function App() {
                 </div>
               ) : (
                 <div className="card success-box">
-                  <div style={{ fontSize: "2.5rem" }}>OK</div>
+                  <div style={{ fontSize: "2.5rem" }}>âœ…</div>
                   <div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.4rem", color: "#5ec85e", marginTop: ".5rem" }}>
                     Â¡Porra enviada!
                   </div>
@@ -932,7 +906,7 @@ export default function App() {
               ))}
               {rErr && <div style={{ color: "#c92727", fontSize: ".82rem", marginTop: ".7rem" }}>{rErr}</div>}
               {rOk ? (
-                <div style={{ color: "#5ec85e", marginTop: ".7rem" }}>OK Cambios guardados.</div>
+                <div style={{ color: "#5ec85e", marginTop: ".7rem" }}>âœ… Cambios guardados.</div>
               ) : (
                 <div className="row" style={{ marginTop: "1rem" }}>
                   <button className="btn" onClick={handleSaveEdit}>Guardar cambios</button>
@@ -968,10 +942,8 @@ export default function App() {
               const filtered = CALENDAR.filter(c => calFilter === "todas" || c.phase === calFilter);
               const byDate = {};
               for (const c of filtered) {
-                const sched = getSchedule(c.id, c.fecha, c.hora);
-                const fecha = sched.fecha;
-                if (!byDate[fecha]) byDate[fecha] = [];
-                byDate[fecha].push({ ...c, fechaReal: fecha, horaReal: sched.hora });
+                if (!byDate[c.fecha]) byDate[c.fecha] = [];
+                byDate[c.fecha].push(c);
               }
               return Object.entries(byDate).sort(([a], [b]) => a.localeCompare(b)).map(([fecha, cals]) => (
                 <div key={fecha} style={{ marginBottom: ".6rem" }}>
@@ -983,7 +955,6 @@ export default function App() {
                     const hasResult = m?.result?.winner;
                     const resolved = resolveTeams(c, tablaTorneo, matchByCalId);
                     const isProvisional = !ligaCompleta && ["playin","semis","final","tercero"].includes(c.phase);
-                    const sched = getSchedule(c.id, c.fecha, c.hora);
                     return (
                       <div key={c.id} className="match-row">
                         <div style={{ color: "#444", fontSize: ".68rem", minWidth: "28px" }}>{c.id}</div>
@@ -998,7 +969,7 @@ export default function App() {
                           </div>
                         </div>
                         {hasResult ? renderMatchResult(c.id) : (
-                          <div className="match-score pend">{sched.hora}</div>
+                          <div className="match-score pend">{c.hora}</div>
                         )}
                         <span className={phaseClass(c.phase)}>{phaseName(c.phase)}</span>
                       </div>
@@ -1195,7 +1166,7 @@ export default function App() {
         <div className="sec fade">
           {isStandalone ? (
             <div className="card" style={{ textAlign: "center", padding: "2rem" }}>
-              <div style={{ fontSize: "3rem" }}>OK</div>
+              <div style={{ fontSize: "3rem" }}>âœ…</div>
               <div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.5rem", color: "#5ec85e", marginTop: ".5rem" }}>
                 Â¡App ya instalada!
               </div>
@@ -1206,7 +1177,7 @@ export default function App() {
           ) : (
             <>
               <div className="card card-red" style={{ textAlign: "center", padding: "1.5rem 1.2rem" }}>
-                <div style={{ fontSize: "3rem" }}>Â·</div>
+                <div style={{ fontSize: "3rem" }}>ðŸ“²</div>
                 <div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.6rem", color: "#c92727", marginTop: ".4rem", letterSpacing: ".08em" }}>
                   Instala la App
                 </div>
@@ -1218,7 +1189,7 @@ export default function App() {
               {/* Android / Chrome */}
               {deferredPrompt && (
                 <div className="card" style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "1.8rem", marginBottom: ".5rem" }}>Android</div>
+                  <div style={{ fontSize: "1.8rem", marginBottom: ".5rem" }}>ðŸ¤–</div>
                   <div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.2rem", color: "#e2d9c5", marginBottom: ".8rem" }}>
                     Android / Chrome
                   </div>
@@ -1228,7 +1199,7 @@ export default function App() {
                     await deferredPrompt.userChoice;
                     setDeferredPrompt(null);
                   }}>
-                    Â· Instalar en este dispositivo
+                    ðŸ“² Instalar en este dispositivo
                   </button>
                 </div>
               )}
@@ -1236,17 +1207,17 @@ export default function App() {
               {/* iOS */}
               <div className="card">
                 <div style={{ display: "flex", alignItems: "center", gap: ".7rem", marginBottom: ".9rem" }}>
-                  <span style={{ fontSize: "1.8rem" }}>iOS</span>
+                  <span style={{ fontSize: "1.8rem" }}>ðŸŽ</span>
                   <div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.2rem", color: "#e2d9c5" }}>
                     iPhone / iPad (Safari)
                   </div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: ".7rem" }}>
                   {[
-                    { icon: "1.", text: "Abre esta pÃ¡gina en Safari (no Chrome)" },
-                    { icon: "2.", text: 'Pulsa el botÃ³n compartir â¬† (abajo en iPhone, arriba en iPad)' },
-                    { icon: "3.", text: '"AÃ±adir a pantalla de inicio"' },
-                    { icon: "4.", text: 'Pulsa "AÃ±adir" â€” Â¡listo!' },
+                    { icon: "1ï¸âƒ£", text: "Abre esta pÃ¡gina en Safari (no Chrome)" },
+                    { icon: "2ï¸âƒ£", text: 'Pulsa el botÃ³n compartir â¬† (abajo en iPhone, arriba en iPad)' },
+                    { icon: "3ï¸âƒ£", text: '"AÃ±adir a pantalla de inicio"' },
+                    { icon: "4ï¸âƒ£", text: 'Pulsa "AÃ±adir" â€” Â¡listo!' },
                   ].map((s, i) => (
                     <div key={i} style={{ display: "flex", gap: ".7rem", alignItems: "flex-start", background: "#06080e", border: "1px solid #1c2135", borderRadius: "6px", padding: ".6rem .8rem" }}>
                       <span style={{ fontSize: "1.1rem" }}>{s.icon}</span>
@@ -1260,17 +1231,17 @@ export default function App() {
               {!deferredPrompt && (
                 <div className="card">
                   <div style={{ display: "flex", alignItems: "center", gap: ".7rem", marginBottom: ".9rem" }}>
-                    <span style={{ fontSize: "1.8rem" }}>Android</span>
+                    <span style={{ fontSize: "1.8rem" }}>ðŸ¤–</span>
                     <div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.2rem", color: "#e2d9c5" }}>
                       Android / Chrome
                     </div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: ".7rem" }}>
                     {[
-                      { icon: "1.", text: "Abre esta pÃ¡gina en Chrome" },
-                      { icon: "2.", text: "Pulsa el menÃº â‹® (tres puntos, arriba a la derecha)" },
-                      { icon: "3.", text: '"AÃ±adir a pantalla de inicio" o "Instalar app"' },
-                      { icon: "4.", text: 'Confirma â€” Â¡listo!' },
+                      { icon: "1ï¸âƒ£", text: "Abre esta pÃ¡gina en Chrome" },
+                      { icon: "2ï¸âƒ£", text: "Pulsa el menÃº â‹® (tres puntos, arriba a la derecha)" },
+                      { icon: "3ï¸âƒ£", text: '"AÃ±adir a pantalla de inicio" o "Instalar app"' },
+                      { icon: "4ï¸âƒ£", text: 'Confirma â€” Â¡listo!' },
                     ].map((s, i) => (
                       <div key={i} style={{ display: "flex", gap: ".7rem", alignItems: "flex-start", background: "#06080e", border: "1px solid #1c2135", borderRadius: "6px", padding: ".6rem .8rem" }}>
                         <span style={{ fontSize: "1.1rem" }}>{s.icon}</span>
@@ -1316,17 +1287,6 @@ export default function App() {
               {/* Config */}
               <div className="card">
                 <div className="ct">ConfiguraciÃ³n</div>
-                <label className="lbl">SecciÃ³n Porra Solidaria</label>
-                <div className="row">
-                  <button className={`btn btn-sm ${config.porraVisible !== false ? "" : "btn-g"}`}
-                    onClick={() => saveConfig({ porraVisible: true })}>Mostrar</button>
-                  <button className={`btn btn-sm ${config.porraVisible === false ? "btn-danger" : "btn-g"}`}
-                    onClick={() => saveConfig({ porraVisible: false })}>Ocultar</button>
-                  <span className={`tag ${config.porraVisible !== false ? "tag-open" : "tag-closed"}`}>
-                    {config.porraVisible !== false ? "VISIBLE" : "OCULTA"}
-                  </span>
-                </div>
-
                 <label className="lbl">InscripciÃ³n</label>
                 <div className="row">
                   <button className={`btn btn-sm ${config.registrationOpen ? "" : "btn-g"}`}
@@ -1343,60 +1303,6 @@ export default function App() {
                 <label className="lbl">AsociaciÃ³n beneficiaria</label>
                 <input className="inp" value={config.charityName || ""} placeholder="Nombre de la asociaciÃ³n"
                   onChange={e => saveConfig({ charityName: e.target.value })} />
-              </div>
-
-              {/* Cambiar fecha/hora de partido */}
-              <div className="card">
-                <div className="ct">Cambiar Fecha / Hora</div>
-                <label className="lbl">Partido</label>
-                <select className="sel" style={{ width: "100%" }}
-                  value={schedEdit.matchId || ""}
-                  onChange={e => {
-                    const cal = CALENDAR.find(c => c.id === e.target.value);
-                    const sched = getSchedule(e.target.value, cal?.fecha || "", cal?.hora || "");
-                    setSchedEdit({ matchId: e.target.value, fecha: sched.fecha, hora: sched.hora });
-                  }}>
-                  <option value="">-- Selecciona partido --</option>
-                  {CALENDAR.map(c => {
-                    const resolved = resolveTeams(c, tablaTorneo, matchByCalId);
-                    const sched = getSchedule(c.id, c.fecha, c.hora);
-                    return (
-                      <option key={c.id} value={c.id}>
-                        {c.id} Â· {resolved.local} vs {resolved.visitante} Â· {formatFecha(sched.fecha)} {sched.hora}
-                        {schedOverrides[c.id] ? " âœï¸" : ""}
-                      </option>
-                    );
-                  })}
-                </select>
-
-                {schedEdit.matchId && (
-                  <>
-                    <div className="g2" style={{ marginTop: ".8rem" }}>
-                      <div>
-                        <label className="lbl">Nueva fecha</label>
-                        <input className="inp" type="date" value={schedEdit.fecha}
-                          onChange={e => setSchedEdit(s => ({ ...s, fecha: e.target.value }))} />
-                      </div>
-                      <div>
-                        <label className="lbl">Nueva hora</label>
-                        <input className="inp" type="time" value={schedEdit.hora}
-                          onChange={e => setSchedEdit(s => ({ ...s, hora: e.target.value }))} />
-                      </div>
-                    </div>
-                    <div className="row" style={{ marginTop: ".8rem" }}>
-                      <button className="btn" onClick={handleSaveSchedule}>Guardar horario</button>
-                      {schedOverrides[schedEdit.matchId] && (
-                        <button className="btn btn-g btn-sm" onClick={async () => {
-                          const next = { ...schedOverrides };
-                          delete next[schedEdit.matchId];
-                          setSchedOverrides(next);
-                          await setDoc(doc(db, "config", "scheduleOverrides"), next);
-                          setSchedEdit({ matchId: null, fecha: "", hora: "" });
-                        }}>â†© Restaurar original</button>
-                      )}
-                    </div>
-                  </>
-                )}
               </div>
 
               {/* Introducir resultado */}
@@ -1473,10 +1379,10 @@ export default function App() {
                               {w3 && <span style={{ fontSize:".72rem", color:w3==="local"?"#c92727":"#5ec85e" }}>âœ“ {w3==="local"?localName.split(" - ")[0]:visitName.split(" - ")[0]}</span>}
                             </div>
                           )}
-                          {needs3 && !setOk(s3L,s3V) && <div style={{ color:"#c9a227", fontSize:".78rem", marginTop:".2rem" }}>! Empate 1-1 â€” introduce el Set 3 (a 10 tantos)</div>}
+                          {needs3 && !setOk(s3L,s3V) && <div style={{ color:"#c9a227", fontSize:".78rem", marginTop:".2rem" }}>âš ï¸ Empate 1-1 â€” introduce el Set 3 (a 10 tantos)</div>}
                           {autoWinner && (
                             <div style={{ background:"#0a1a08", border:"1px solid #286a28", borderRadius:"6px", padding:".6rem .9rem", marginTop:".6rem", display:"flex", alignItems:"center", gap:".6rem" }}>
-                              <span style={{ fontSize:"1.1rem" }}>OK</span>
+                              <span style={{ fontSize:"1.1rem" }}>âœ…</span>
                               <div>
                                 <div style={{ color:"#5ec85e", fontSize:".75rem", fontFamily:"'Bebas Neue'", letterSpacing:".05em" }}>Ganador detectado</div>
                                 <div style={{ color:"#e2d9c5", fontSize:".85rem", fontWeight:600 }}>
@@ -1494,7 +1400,7 @@ export default function App() {
                                 if (m && window.confirm("Â¿Borrar este resultado?")) await deleteDoc(doc(db,"matches",m.id));
                                 setNm({ matchId:null, local:"", visitante:"", sets:[], winner:"", phase:"liga", fecha:"" });
                                 setSLocal(["","",""]); setSVisit(["","",""]);
-                              }}>X Borrar resultado</button>
+                              }}>ðŸ—‘ Borrar resultado</button>
                             )}
                           </div>
                         </>
@@ -1517,7 +1423,7 @@ export default function App() {
                         ))}
                       </div>
                       <div className="row">
-                        <button className="btn btn-ok btn-sm" onClick={() => handleApprove(p.id)}>OK Aprobar</button>
+                        <button className="btn btn-ok btn-sm" onClick={() => handleApprove(p.id)}>âœ… Aprobar</button>
                         <button className="btn btn-danger btn-sm" onClick={() => handleReject(p.id)}>âŒ Rechazar</button>
                       </div>
                     </div>
@@ -1538,7 +1444,7 @@ export default function App() {
                       <button className="btn-del" onClick={async () => {
                         if (await reauth() && window.confirm(`Â¿Borrar a ${p.name}?`))
                           deleteDoc(doc(db, "participants", p.id));
-                      }}>X</button>
+                      }}>ðŸ—‘</button>
                     </div>
                   </div>
                 ))}
@@ -1564,7 +1470,7 @@ export default function App() {
                     a.href = URL.createObjectURL(blob);
                     a.download = `paleta-cuero-backup-${new Date().toISOString().slice(0, 10)}.json`;
                     a.click();
-                  }}>â†“ Backup JSON</button>
+                  }}>ðŸ’¾ Backup JSON</button>
                 </div>
               </div>
 
@@ -1591,7 +1497,7 @@ export default function App() {
         </div>
       )}
 
-      <button className="refresh-btn" onClick={() => window.location.reload()} title="Actualizar">R</button>
+      <button className="refresh-btn" onClick={() => window.location.reload()} title="Actualizar">â†»</button>
     </div>
   );
 }
