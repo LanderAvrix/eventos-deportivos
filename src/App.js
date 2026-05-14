@@ -388,7 +388,7 @@ export default function App() {
   const [matches, setMatches] = useState([]);
   const [config, setConfig] = useState({
     registrationOpen: true, charityName: "", prizeDesc: "",
-    champion: null, finalist: null, third: null
+    champion: null, finalist: null, third: null, porraVisible: true
   });
   const [adminUser, setAdminUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -420,6 +420,18 @@ export default function App() {
   const [sLocal, setSLocal] = useState(["","",""]);
   const [sVisit, setSVisit] = useState(["","",""]);
 
+  // Admin schedule edit
+  const [schedEdit, setSchedEdit] = useState({ matchId: null, fecha: "", hora: "" });
+  const [schedOverrides, setSchedOverrides] = useState({});
+
+  const handleSaveSchedule = async () => {
+    if (!schedEdit.matchId || !schedEdit.fecha || !schedEdit.hora) return;
+    const next = { ...schedOverrides, [schedEdit.matchId]: { fecha: schedEdit.fecha, hora: schedEdit.hora } };
+    setSchedOverrides(next);
+    await setDoc(doc(db, "config", "scheduleOverrides"), next);
+    setSchedEdit({ matchId: null, fecha: "", hora: "" });
+  };
+
   // UI
   const [expandedLb, setExpandedLb] = useState(null);
   const [calFilter, setCalFilter] = useState("todas");
@@ -433,6 +445,9 @@ export default function App() {
       setMatches(s.docs.map(d => ({ id: d.id, ...d.data() })))));
     u.push(onSnapshot(doc(db, "config", "settings"), s => {
       if (s.exists()) setConfig(s.data());
+    }));
+    u.push(onSnapshot(doc(db, "config", "scheduleOverrides"), s => {
+      if (s.exists()) setSchedOverrides(s.data());
     }));
     u.push(onAuthStateChanged(auth, user => setAdminUser(user)));
     const splash = setTimeout(() => setLoading(false), 800);
@@ -456,6 +471,12 @@ export default function App() {
   // Match results lookup by id
   const matchByCalId = {};
   for (const m of matches) { if (m.calId) matchByCalId[m.calId] = m; }
+
+  // Obtener fecha/hora real (con posible override del admin)
+  const getSchedule = (calId, defaultFecha, defaultHora) => ({
+    fecha: schedOverrides[calId]?.fecha || defaultFecha,
+    hora: schedOverrides[calId]?.hora || defaultHora,
+  });
 
   // Liga completa cuando los 27 partidos tienen resultado
   const ligaJugados = matches.filter(m => m.phase === "liga" && m.result?.winner).length;
@@ -657,8 +678,10 @@ export default function App() {
           { id: "calendario", label: "📅 Calendario" },
           { id: "liga",       label: "🏆 Liga" },
           { id: "reglamento", label: "📋 Reglamento" },
-          { id: "porra",      label: "🎯 Porra Solidaria" },
-          { id: "ranking",    label: "🥇 Ranking Porra" },
+          ...(config.porraVisible !== false ? [
+            { id: "porra",   label: "🎯 Porra Solidaria" },
+            { id: "ranking", label: "🥇 Ranking Porra" },
+          ] : []),
           { id: "instalar",   label: "📲 Instalar" },
           ...(adminUnlocked ? [{ id: "admin", label: "⚙️ Admin" }] : []),
         ].map(t => (
@@ -942,8 +965,10 @@ export default function App() {
               const filtered = CALENDAR.filter(c => calFilter === "todas" || c.phase === calFilter);
               const byDate = {};
               for (const c of filtered) {
-                if (!byDate[c.fecha]) byDate[c.fecha] = [];
-                byDate[c.fecha].push(c);
+                const sched = getSchedule(c.id, c.fecha, c.hora);
+                const fecha = sched.fecha;
+                if (!byDate[fecha]) byDate[fecha] = [];
+                byDate[fecha].push({ ...c, fechaReal: fecha, horaReal: sched.hora });
               }
               return Object.entries(byDate).sort(([a], [b]) => a.localeCompare(b)).map(([fecha, cals]) => (
                 <div key={fecha} style={{ marginBottom: ".6rem" }}>
@@ -955,6 +980,7 @@ export default function App() {
                     const hasResult = m?.result?.winner;
                     const resolved = resolveTeams(c, tablaTorneo, matchByCalId);
                     const isProvisional = !ligaCompleta && ["playin","semis","final","tercero"].includes(c.phase);
+                    const sched = getSchedule(c.id, c.fecha, c.hora);
                     return (
                       <div key={c.id} className="match-row">
                         <div style={{ color: "#444", fontSize: ".68rem", minWidth: "28px" }}>{c.id}</div>
@@ -969,7 +995,7 @@ export default function App() {
                           </div>
                         </div>
                         {hasResult ? renderMatchResult(c.id) : (
-                          <div className="match-score pend">{c.hora}</div>
+                          <div className="match-score pend">{sched.hora}</div>
                         )}
                         <span className={phaseClass(c.phase)}>{phaseName(c.phase)}</span>
                       </div>
@@ -1287,6 +1313,17 @@ export default function App() {
               {/* Config */}
               <div className="card">
                 <div className="ct">Configuración</div>
+                <label className="lbl">Sección Porra Solidaria</label>
+                <div className="row">
+                  <button className={`btn btn-sm ${config.porraVisible !== false ? "" : "btn-g"}`}
+                    onClick={() => saveConfig({ porraVisible: true })}>Mostrar</button>
+                  <button className={`btn btn-sm ${config.porraVisible === false ? "btn-danger" : "btn-g"}`}
+                    onClick={() => saveConfig({ porraVisible: false })}>Ocultar</button>
+                  <span className={`tag ${config.porraVisible !== false ? "tag-open" : "tag-closed"}`}>
+                    {config.porraVisible !== false ? "VISIBLE" : "OCULTA"}
+                  </span>
+                </div>
+
                 <label className="lbl">Inscripción</label>
                 <div className="row">
                   <button className={`btn btn-sm ${config.registrationOpen ? "" : "btn-g"}`}
@@ -1303,6 +1340,60 @@ export default function App() {
                 <label className="lbl">Asociación beneficiaria</label>
                 <input className="inp" value={config.charityName || ""} placeholder="Nombre de la asociación"
                   onChange={e => saveConfig({ charityName: e.target.value })} />
+              </div>
+
+              {/* Cambiar fecha/hora de partido */}
+              <div className="card">
+                <div className="ct">Cambiar Fecha / Hora</div>
+                <label className="lbl">Partido</label>
+                <select className="sel" style={{ width: "100%" }}
+                  value={schedEdit.matchId || ""}
+                  onChange={e => {
+                    const cal = CALENDAR.find(c => c.id === e.target.value);
+                    const sched = getSchedule(e.target.value, cal?.fecha || "", cal?.hora || "");
+                    setSchedEdit({ matchId: e.target.value, fecha: sched.fecha, hora: sched.hora });
+                  }}>
+                  <option value="">-- Selecciona partido --</option>
+                  {CALENDAR.map(c => {
+                    const resolved = resolveTeams(c, tablaTorneo, matchByCalId);
+                    const sched = getSchedule(c.id, c.fecha, c.hora);
+                    return (
+                      <option key={c.id} value={c.id}>
+                        {c.id} · {resolved.local} vs {resolved.visitante} · {formatFecha(sched.fecha)} {sched.hora}
+                        {schedOverrides[c.id] ? " ✏️" : ""}
+                      </option>
+                    );
+                  })}
+                </select>
+
+                {schedEdit.matchId && (
+                  <>
+                    <div className="g2" style={{ marginTop: ".8rem" }}>
+                      <div>
+                        <label className="lbl">Nueva fecha</label>
+                        <input className="inp" type="date" value={schedEdit.fecha}
+                          onChange={e => setSchedEdit(s => ({ ...s, fecha: e.target.value }))} />
+                      </div>
+                      <div>
+                        <label className="lbl">Nueva hora</label>
+                        <input className="inp" type="time" value={schedEdit.hora}
+                          onChange={e => setSchedEdit(s => ({ ...s, hora: e.target.value }))} />
+                      </div>
+                    </div>
+                    <div className="row" style={{ marginTop: ".8rem" }}>
+                      <button className="btn" onClick={handleSaveSchedule}>Guardar horario</button>
+                      {schedOverrides[schedEdit.matchId] && (
+                        <button className="btn btn-g btn-sm" onClick={async () => {
+                          const next = { ...schedOverrides };
+                          delete next[schedEdit.matchId];
+                          setSchedOverrides(next);
+                          await setDoc(doc(db, "config", "scheduleOverrides"), next);
+                          setSchedEdit({ matchId: null, fecha: "", hora: "" });
+                        }}>↩ Restaurar original</button>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Introducir resultado */}
