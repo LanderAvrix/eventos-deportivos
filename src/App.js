@@ -1594,7 +1594,7 @@ export default function App() {
         </div>
       )}
 
-      <button className="refresh-btn" onClick={() => window.location.reload()} title="Actualizar">>↻</button>
+      <button className="refresh-btn" onClick={() => window.location.reload()} title="Actualizar">↻</button>
     </div>
   );
 }
