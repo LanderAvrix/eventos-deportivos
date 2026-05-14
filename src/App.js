@@ -872,7 +872,7 @@ export default function App() {
                 </div>
               ) : (
                 <div className="card success-box">
-                  <div style={{ fontSize: "2.5rem" }}>OK</div>
+                  <div style={{ fontSize: "2.5rem" }}>✅</div>
                   <div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.4rem", color: "#5ec85e", marginTop: ".5rem" }}>
                     ¡Porra enviada!
                   </div>
@@ -1195,7 +1195,7 @@ export default function App() {
         <div className="sec fade">
           {isStandalone ? (
             <div className="card" style={{ textAlign: "center", padding: "2rem" }}>
-              <div style={{ fontSize: "3rem" }}>OK</div>
+              <div style={{ fontSize: "3rem" }}>✅</div>
               <div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.5rem", color: "#5ec85e", marginTop: ".5rem" }}>
                 ¡App ya instalada!
               </div>
@@ -1206,7 +1206,7 @@ export default function App() {
           ) : (
             <>
               <div className="card card-red" style={{ textAlign: "center", padding: "1.5rem 1.2rem" }}>
-                <div style={{ fontSize: "3rem" }}>·</div>
+                <div style={{ fontSize: "3rem" }}>📲</div>
                 <div style={{ fontFamily: "'Bebas Neue'", fontSize: "1.6rem", color: "#c92727", marginTop: ".4rem", letterSpacing: ".08em" }}>
                   Instala la App
                 </div>
@@ -1243,10 +1243,10 @@ export default function App() {
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: ".7rem" }}>
                   {[
-                    { icon: "1.", text: "Abre esta página en Safari (no Chrome)" },
-                    { icon: "2.", text: 'Pulsa el botón compartir ⬆ (abajo en iPhone, arriba en iPad)' },
-                    { icon: "3.", text: '"Añadir a pantalla de inicio"' },
-                    { icon: "4.", text: 'Pulsa "Añadir" — ¡listo!' },
+                    { icon: "1️⃣", text: "Abre esta página en Safari (no Chrome)" },
+                    { icon: "2️⃣", text: 'Pulsa el botón compartir ⬆ (abajo en iPhone, arriba en iPad)' },
+                    { icon: "3️⃣", text: '"Añadir a pantalla de inicio"' },
+                    { icon: "4️⃣", text: 'Pulsa "Añadir" — ¡listo!' },
                   ].map((s, i) => (
                     <div key={i} style={{ display: "flex", gap: ".7rem", alignItems: "flex-start", background: "#06080e", border: "1px solid #1c2135", borderRadius: "6px", padding: ".6rem .8rem" }}>
                       <span style={{ fontSize: "1.1rem" }}>{s.icon}</span>
@@ -1267,10 +1267,10 @@ export default function App() {
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: ".7rem" }}>
                     {[
-                      { icon: "1.", text: "Abre esta página en Chrome" },
-                      { icon: "2.", text: "Pulsa el menú ⋮ (tres puntos, arriba a la derecha)" },
-                      { icon: "3.", text: '"Añadir a pantalla de inicio" o "Instalar app"' },
-                      { icon: "4.", text: 'Confirma — ¡listo!' },
+                      { icon: "1️⃣", text: "Abre esta página en Chrome" },
+                      { icon: "2️⃣", text: "Pulsa el menú ⋮ (tres puntos, arriba a la derecha)" },
+                      { icon: "3️⃣", text: '"Añadir a pantalla de inicio" o "Instalar app"' },
+                      { icon: "4️⃣", text: 'Confirma — ¡listo!' },
                     ].map((s, i) => (
                       <div key={i} style={{ display: "flex", gap: ".7rem", alignItems: "flex-start", background: "#06080e", border: "1px solid #1c2135", borderRadius: "6px", padding: ".6rem .8rem" }}>
                         <span style={{ fontSize: "1.1rem" }}>{s.icon}</span>
@@ -1476,7 +1476,7 @@ export default function App() {
                           {needs3 && !setOk(s3L,s3V) && <div style={{ color:"#c9a227", fontSize:".78rem", marginTop:".2rem" }}>! Empate 1-1 — introduce el Set 3 (a 10 tantos)</div>}
                           {autoWinner && (
                             <div style={{ background:"#0a1a08", border:"1px solid #286a28", borderRadius:"6px", padding:".6rem .9rem", marginTop:".6rem", display:"flex", alignItems:"center", gap:".6rem" }}>
-                              <span style={{ fontSize:"1.1rem" }}>OK</span>
+                              <span style={{ fontSize:"1.1rem" }}>✅</span>
                               <div>
                                 <div style={{ color:"#5ec85e", fontSize:".75rem", fontFamily:"'Bebas Neue'", letterSpacing:".05em" }}>Ganador detectado</div>
                                 <div style={{ color:"#e2d9c5", fontSize:".85rem", fontWeight:600 }}>
@@ -1538,7 +1538,7 @@ export default function App() {
                       <button className="btn-del" onClick={async () => {
                         if (await reauth() && window.confirm(`¿Borrar a ${p.name}?`))
                           deleteDoc(doc(db, "participants", p.id));
-                      }}>X</button>
+                      }}>🗑</button>
                     </div>
                   </div>
                 ))}
@@ -1564,7 +1564,7 @@ export default function App() {
                     a.href = URL.createObjectURL(blob);
                     a.download = `paleta-cuero-backup-${new Date().toISOString().slice(0, 10)}.json`;
                     a.click();
-                  }}>↓ Backup JSON</button>
+                  }}>💾 Backup JSON</button>
                 </div>
               </div>
 
