@@ -671,16 +671,16 @@ export default function App() {
       {/* NAV */}
       <nav className="nav">
         {[
-          { id: "home",       label: "Inicio" },
-          { id: "calendario", label: "Calendario" },
-          { id: "liga",       label: "Liga" },
-          { id: "reglamento", label: "Reglamento" },
+          { id: "home",       label: "🏠 Inicio" },
+          { id: "calendario", label: "📅 Calendario" },
+          { id: "liga",       label: "🏆 Liga" },
+          { id: "reglamento", label: "📋 Reglamento" },
           ...(config.porraVisible !== false ? [
-            { id: "porra",   label: "Porra Solidaria" },
-            { id: "ranking", label: "Ranking Porra" },
+            { id: "porra",   label: "🎯 Porra Solidaria" },
+            { id: "ranking", label: "🥇 Ranking Porra" },
           ] : []),
-          { id: "instalar",   label: "Instalar App" },
-          ...(adminUnlocked ? [{ id: "admin", label: "Admin" }] : []),
+          { id: "instalar",   label: "📲 Instalar" },
+          ...(adminUnlocked ? [{ id: "admin", label: "⚙️ Admin" }] : []),
         ].map(t => (
           <button key={t.id} className={`nb${view === t.id ? " on" : ""}`}
             onClick={() => setView(t.id)}>{t.label}</button>
@@ -693,7 +693,7 @@ export default function App() {
           {/* Solidaridad */}
           {config.porraVisible !== false && (
             <div className="solidarity-bar">
-              ♥ Porra solidaria — Premio: {config.prizeDesc || "2 entradas para un partido de pelota"}
+              ❤️ Porra solidaria — Premio: {config.prizeDesc || "2 entradas para un partido de pelota"}
               {config.charityName && ` · Recaudación para ${config.charityName}`}
             </div>
           )}
